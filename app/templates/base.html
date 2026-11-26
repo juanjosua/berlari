@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#fc4c02">
+  <title>Berlari</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <header>
+    <a href="/" class="brand">Berlari</a>
+    {% if user %}<nav><a href="/new">New plan</a> <a href="/logout">Log out</a></nav>{% endif %}
+  </header>
+  <main>
+    {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
+    {% block content %}{% endblock %}
+  </main>
+  <footer>Powered by Strava · <a href="https://github.com/juanjosua/berlari">Source</a></footer>
+</body>
+</html>

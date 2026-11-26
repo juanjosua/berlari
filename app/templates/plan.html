@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+{% set p = plan.params %}{% set s = plan.stats %}
+<section class="card summary">
+  <h1>{{ {"5k": "5K", "10k": "10K", "half": "Half marathon", "marathon": "Marathon"}[p.distance] }}
+    · {{ date.fromisoformat(p.event_date).strftime("%d %b %Y") }}</h1>
+  <p><strong>{{ days_left }}</strong> days to go{% if p.goal_time %} · goal {{ p.goal_time }}{% endif %}</p>
+  <p class="muted small">From Strava: {{ s.weekly_km }} km/week · longest {{ s.longest_km }} km ·
+    typical pace {{ s.easy_pace_s | pace }}</p>
+</section>
+
+{% for week in weeks %}
+<section class="week">
+  <h2>Week of {{ date.fromisoformat(week[0].date).strftime("%d %b") }}
+    <span class="muted">{{ "%.0f" | format(week | sum(attribute="km")) }} km</span></h2>
+  <ol>
+    {% for d in week %}
+    <li class="day {{ d.kind }} {% if d.date == today %}today{% endif %}" {% if d.date == today %}id="today"{% endif %}>
+      <div class="when">{{ date.fromisoformat(d.date).strftime("%a %d") }}</div>
+      <div class="what">
+        <strong>{{ d.kind | capitalize }}{% if d.km %} · {{ "%g" | format(d.km) }} km{% endif %}</strong>
+        <span>{{ d.detail }}</span>
+      </div>
+    </li>
+    {% endfor %}
+  </ol>
+</section>
+{% endfor %}
+{% endblock %}

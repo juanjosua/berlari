@@ -1,0 +1,15 @@
+[Unit]
+Description=Berlari web app
+After=network.target
+
+[Service]
+User=berlari
+WorkingDirectory=/opt/berlari
+EnvironmentFile=/opt/berlari/.env
+Environment=BERLARI_DB=/var/lib/berlari/berlari.db
+ExecStart=/opt/berlari/.venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --proxy-headers
+Restart=on-failure
+MemoryMax=300M
+
+[Install]
+WantedBy=multi-user.target

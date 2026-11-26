@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Hi {{ user.name.split(' ')[0] }}, what are you training for?</h1>
+<form method="post" action="/new" class="card">
+  <label>Event date
+    <input type="date" name="event_date" required>
+  </label>
+  <label>Distance
+    <select name="distance">
+      <option value="5k">5K</option>
+      <option value="10k">10K</option>
+      <option value="half" selected>Half marathon</option>
+      <option value="marathon">Marathon</option>
+    </select>
+  </label>
+  <label>Runs per week
+    <select name="runs_per_week">
+      {% for n in [3, 4, 5, 6] %}<option value="{{ n }}" {% if n == 4 %}selected{% endif %}>{{ n }}</option>{% endfor %}
+    </select>
+  </label>
+  <label>Goal time <span class="muted">(optional, e.g. 55:00 or 1:59:00)</span>
+    <input type="text" name="goal_time" inputmode="numeric" pattern="\d{1,2}(:\d{2}){1,2}" placeholder="1:59:00">
+  </label>
+  <button class="btn" type="submit">Build my plan</button>
+  <p class="muted small">Reads your last 12 weeks of Strava runs. Takes a few seconds.</p>
+</form>
+{% if saved %}<p><a href="/plan">← Back to current plan</a></p>{% endif %}
+<form method="post" action="/forget" onsubmit="return confirm('Delete your Berlari data? This cannot be undone.')">
+  <button class="link danger" type="submit">Delete my data</button>
+</form>
+{% endblock %}
