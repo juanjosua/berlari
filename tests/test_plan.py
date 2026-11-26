@@ -41,3 +41,14 @@ def test_goal_time_sets_race_pace():
 def test_past_event_rejected():
     with pytest.raises(ValueError):
         build_plan(STATS, "5k", TODAY, 4, today=TODAY)
+
+
+def test_day_status():
+    from app.plan import day_status
+    run = {"runs": {"1": {"km": 8.0}}}
+    assert day_status({"date": "2026-11-20", "kind": "easy", "km": 8} | run, "2026-11-25") == "done"
+    assert day_status({"date": "2026-11-20", "kind": "long", "km": 16} | run, "2026-11-25") == "partial"
+    assert day_status({"date": "2026-11-20", "kind": "rest", "km": 0} | run, "2026-11-25") == "extra"
+    assert day_status({"date": "2026-11-20", "kind": "easy", "km": 8}, "2026-11-25") == "missed"
+    assert day_status({"date": "2026-11-20", "kind": "rest", "km": 0}, "2026-11-25") is None
+    assert day_status({"date": "2026-11-26", "kind": "easy", "km": 8}, "2026-11-25") is None

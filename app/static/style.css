@@ -57,3 +57,14 @@ input:focus, select:focus { outline: 2px solid var(--orange); outline-offset: 1p
 .day.intervals, .day.tempo { border-left-color: var(--hard); } .day.race { border-left-color: var(--race); }
 .day.rest { opacity: .65; }
 .day.today { outline: 2px solid var(--orange); }
+.coach { margin-top: 12px; } .coach h2 { margin-top: 0; }
+.coach p { margin: 0; }
+.day .what .why { color: var(--fg); opacity: .8; margin-top: 4px; font-style: italic; }
+.day .what .actual { color: var(--fg); font-weight: 600; margin-top: 4px; }
+.review { margin: 8px 0 0; padding: 8px 10px; border-radius: 8px; font-size: .9rem;
+          background: color-mix(in srgb, var(--orange) 12%, transparent); }
+.badge { display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 99px; font-size: .75rem;
+         font-style: normal; font-weight: 700; vertical-align: middle; color: #fff; background: var(--muted); }
+.badge.done { background: #1f9d55; } .badge.partial { background: #d98a00; }
+.badge.missed { background: #d93a3a; } .badge.extra { background: var(--navy-500); }
+.day.done, .day.partial, .day.extra { opacity: 1; }

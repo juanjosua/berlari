@@ -24,6 +24,8 @@ app/
   main.py        routes (login, callback, plan form, plan view)
   strava.py      OAuth + activity fetching + token refresh
   plan.py        pure training-plan generator (no I/O, easy to test)
+  coach.py       LLM coach text via Groq
+  subscribe.py   one-time Strava webhook registration
   db.py          SQLite helpers
   templates/     Jinja2 pages
   static/        CSS
@@ -70,6 +72,16 @@ Run tests: `pip install pytest && pytest`
 - **Paces** come from your goal time if given, otherwise from your recent typical pace.
 
 It is a heuristic, not coaching advice. Improvements welcome.
+
+## AI coach and automatic tracking
+
+- **Coach text** (optional, needs `GROQ_SECRET_KEY`): `app/coach.py` asks a Groq-hosted LLM to write a
+  fitness summary, a one-line "why" for each day (two weeks ahead, one request per week), and a short review
+  after each run. The plan itself stays rule-based; the LLM only explains numbers we computed.
+  Only training numbers are sent, never names.
+- **Automatic tracking**: a Strava webhook (`/strava/webhook`) tells us when a run is uploaded, edited or
+  deleted. The run is attached to that day of the plan and the day is marked done / partly done / missed.
+  Register the webhook once per Strava app: `python -m app.subscribe` (on the server, with `.env` filled).
 
 ## Contributing
 

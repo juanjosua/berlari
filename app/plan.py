@@ -120,3 +120,16 @@ def build_plan(stats: Stats, distance: str, event: date, runs_per_week: int,
 
 def plan_to_dicts(days: list[Day]) -> list[dict]:
     return [asdict(d) for d in days]
+
+
+def day_status(day: dict, today: str) -> str | None:
+    """done / partial / extra (ran on a rest day) / missed / None (upcoming or rest)."""
+    runs = day.get("runs") or {}
+    if runs:
+        if day["kind"] == "rest":
+            return "extra"
+        km = sum(r["km"] for r in runs.values())
+        return "done" if km >= 0.8 * day["km"] or day["kind"] == "race" else "partial"
+    if day["date"] < today and day["kind"] != "rest":
+        return "missed"
+    return None

@@ -9,17 +9,29 @@
     typical pace {{ s.easy_pace_s | pace }}</p>
 </section>
 
+{% if plan.summary %}
+<section class="card coach"><h2>Your current fitness</h2><p>{{ plan.summary }}</p></section>
+{% elif coach_on %}
+<p class="muted small">Your coach is writing a fitness summary and workout notes. Refresh in a moment.</p>
+{% endif %}
+
 {% for week in weeks %}
 <section class="week">
   <h2>Week of {{ date.fromisoformat(week[0].date).strftime("%d %b") }}
     <span class="muted">{{ "%.0f" | format(week | sum(attribute="km")) }} km</span></h2>
   <ol>
     {% for d in week %}
-    <li class="day {{ d.kind }} {% if d.date == today %}today{% endif %}" {% if d.date == today %}id="today"{% endif %}>
+    <li class="day {{ d.kind }} {{ d.status or "" }} {% if d.date == today %}today{% endif %}" {% if d.date == today %}id="today"{% endif %}>
       <div class="when">{{ date.fromisoformat(d.date).strftime("%a %d") }}</div>
       <div class="what">
-        <strong>{{ d.kind | capitalize }}{% if d.km %} · {{ "%g" | format(d.km) }} km{% endif %}</strong>
+        <strong>{{ d.kind | capitalize }}{% if d.km %} · {{ "%g" | format(d.km) }} km{% endif %}
+          {% if d.status %}<em class="badge {{ d.status }}">{{ {"done": "Done", "partial": "Partly done", "extra": "Extra run", "missed": "Missed"}[d.status] }}</em>{% endif %}</strong>
         <span>{{ d.detail }}</span>
+        {% if d.why %}<span class="why">{{ d.why }}</span>{% endif %}
+        {% for r in (d.runs or {}).values() %}
+        <span class="actual">Ran {{ "%g" | format(r.km) }} km in {{ "%g" | format(r.moving_min) }} min · {{ r.pace }}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}</span>
+        {% endfor %}
+        {% if d.review %}<p class="review">{{ d.review }}</p>{% endif %}
       </div>
     </li>
     {% endfor %}
