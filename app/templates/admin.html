@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Admin</h1>
+{% set n = athletes | length %}
+<section class="card capacity">
+  <span class="eyebrow">Strava athlete capacity</span>
+  <p class="headline">{{ n }} of {{ capacity }} connected</p>
+  <div class="bar"><span style="width: {{ [100, (n / capacity * 100) | round] | min }}%"></span></div>
+  {% if n >= capacity %}<p class="small"><b>Full.</b> New athletes can't connect until Strava raises the limit (submit the review).</p>
+  {% elif n >= capacity - 2 %}<p class="small">Almost full: time to submit the Strava review.</p>{% endif %}
+</section>
+
+<section class="card recent">
+  <span class="eyebrow">Athletes</span>
+  <ul>{% for a in athletes %}
+    <li class="athlete">
+      <span><b>{{ a.name or "(no name)" }}</b>
+        <a class="muted small" href="https://www.strava.com/athletes/{{ a.id }}" target="_blank" rel="noopener">#{{ a.id }}</a></span>
+      <span class="small">
+        {% if a.params %}{{ {"5k": "5K", "10k": "10K", "half": "Half", "marathon": "Marathon"}[a.params.distance] }}
+          on {{ date.fromisoformat(a.params.event_date).strftime("%d %b %Y") }}
+          · plan since {{ a.plan_created[:10] }}{% else %}<i>no plan yet</i>{% endif %}
+      </span>
+      <span class="small muted">{{ a.runs }} runs{% if a.last_run %} · last {{ a.last_run }}{% endif %}
+        {% if a.summary_date %} · summary {{ a.summary_date }}{% endif %}</span>
+    </li>
+  {% else %}<li class="muted">No athletes yet.</li>{% endfor %}</ul>
+</section>
+{% endblock %}

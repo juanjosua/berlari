@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<article class="card prose">
+  <h1>Support</h1>
+  <p>Something not working, or have an idea? Open an issue on GitHub and we'll take a look:</p>
+  <p><a class="btn" href="https://github.com/juanjosua/berlari/issues" target="_blank" rel="noopener">Report a problem or suggest a feature</a></p>
+
+  <h2>Common questions</h2>
+  <p><b>"Strava login was cancelled or failed."</b> Try again and tap Authorize on the Strava screen.
+    Berlari can only connect a limited number of athletes for now; if it's full, please check back later.</p>
+  <p><b>My plan doesn't match my level.</b> The plan starts from your last 12 weeks of runs on Strava. If you
+    recently started logging runs, create a new plan after a few weeks of data.</p>
+  <p><b>A run isn't showing on my plan.</b> New runs arrive automatically a minute or two after they reach Strava.
+    Only runs (not walks or rides) on a day of your plan are matched.</p>
+  <p><b>When do coach notes appear?</b> Each day's note is written the evening before (20:00 Jakarta time).
+    Your condition summary updates each evening after days you trained.</p>
+  <p><b>How do I delete my data?</b> Use "Delete my data" on the New plan page, or disconnect Berlari in your
+    Strava settings. See the <a href="/privacy">privacy policy</a>.</p>
+</article>
+{% endblock %}

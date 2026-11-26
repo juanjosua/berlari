@@ -127,6 +127,18 @@ def update_days(uid, fn) -> None:
         c.close()
 
 
+def athletes() -> list[dict]:
+    """Admin overview: every connected athlete with plan and activity info."""
+    with conn() as c:
+        rows = c.execute("""
+            SELECT u.id, u.name, p.params, p.created_at AS plan_created,
+                   (SELECT COUNT(*) FROM activities a WHERE a.user_id = u.id) AS runs,
+                   (SELECT MAX(date) FROM activities a WHERE a.user_id = u.id) AS last_run,
+                   (SELECT date FROM summaries s WHERE s.user_id = u.id) AS summary_date
+            FROM users u LEFT JOIN plans p ON p.user_id = u.id ORDER BY u.name""").fetchall()
+    return [{**dict(r), "params": json.loads(r["params"]) if r["params"] else None} for r in rows]
+
+
 def delete_user(uid) -> None:
     with conn() as c:
         c.execute("DELETE FROM plans WHERE user_id=?", (uid,))

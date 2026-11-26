@@ -60,3 +60,22 @@ def test_parse_goal_minutes():
     for bad in ("1:59", "5", "abc", "-30"):
         with pytest.raises(ValueError):
             main.parse_goal(bad)
+
+
+def test_admin_only_for_allowlisted_athletes_and_support_page(monkeypatch):
+    def login(uid):
+        monkeypatch.setattr(strava, "exchange_code", lambda code: (
+            db.save_user(uid, f"Runner {uid}", "a", "r", int(time.time()) + 3600), {"athlete": {"id": uid}})[1])
+        c = TestClient(main.app, follow_redirects=False)
+        state = c.get("/auth/login").headers["location"].split("state=")[1]
+        c.get("/auth/callback", params={"code": "x", "state": state})
+        return c
+
+    db.init()  # earlier test removes the test database file
+    monkeypatch.setattr(main, "ADMIN_IDS", {501})
+    assert TestClient(main.app).get("/admin").status_code == 404  # logged out
+    assert login(502).get("/admin").status_code == 404  # not an admin
+    page = login(501).get("/admin").text
+    assert "Runner 501" in page and "Runner 502" in page and "of 10 connected" in page
+    assert "github.com/juanjosua/berlari/issues" in TestClient(main.app).get("/support").text
+    db.delete_user(501), db.delete_user(502)

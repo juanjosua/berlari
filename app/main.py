@@ -8,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-from fastapi import BackgroundTasks, FastAPI, Form, Request  # noqa: E402
+from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Request  # noqa: E402
 from fastapi.responses import JSONResponse, RedirectResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from fastapi.templating import Jinja2Templates  # noqa: E402
@@ -79,6 +79,26 @@ def callback(request: Request, code: str = "", state: str = "", error: str = "")
     tok = strava.exchange_code(code)
     request.session["uid"] = tok["athlete"]["id"]
     return RedirectResponse("/")
+
+
+# Strava athlete IDs allowed to open /admin (comma-separated), e.g. ADMIN_ATHLETE_IDS=12345,67890
+ADMIN_IDS = {int(x) for x in os.environ.get("ADMIN_ATHLETE_IDS", "").replace(" ", "").split(",") if x.isdigit()}
+STRAVA_CAPACITY = int(os.environ.get("STRAVA_ATHLETE_CAPACITY", "10"))
+
+
+@app.get("/admin")
+def admin(request: Request):
+    user = current_user(request)
+    if not user or user["id"] not in ADMIN_IDS:
+        raise HTTPException(404)  # don't reveal that the page exists
+    rows = db.athletes()
+    return templates.TemplateResponse(request, "admin.html", {
+        "user": user, "athletes": rows, "capacity": STRAVA_CAPACITY, "date": date})
+
+
+@app.get("/support")
+def support(request: Request):
+    return templates.TemplateResponse(request, "support.html", {"user": current_user(request)})
 
 
 @app.get("/privacy")

@@ -128,3 +128,9 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 .recent li:first-child { border-top: 0; }
 .recent .rdate { color: var(--muted); min-width: 84px; }
 .recent .strava-link { margin-left: auto; }
+/* Admin */
+.capacity { margin-top: 8px; }
+.bar { height: 10px; border-radius: 99px; background: var(--line); overflow: hidden; margin: 4px 0 8px; }
+.bar span { display: block; height: 100%; background: var(--orange); }
+.recent li.athlete { flex-direction: column; align-items: flex-start; gap: 2px; }
+.prose .btn { max-width: 360px; }
