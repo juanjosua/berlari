@@ -17,10 +17,41 @@
 </section>
 <p class="muted small">Change vs yesterday. Fitness = 6-week training load, fatigue = last week's, form = fitness − fatigue.</p>
 
-{% if summary %}
-<section class="card coach"><h2>Your current condition <span class="muted small">updated {{ date.fromisoformat(summary.date).strftime("%d %b") }}</span></h2><p>{{ summary.text }}</p></section>
-{% elif coach_on %}
-<p class="muted small">Your coach is writing your fitness summary. Refresh in a moment.</p>
+<section class="card condition">
+  <div class="cond-head"><span class="eyebrow">Your current condition</span>
+    {% if summary %}<span class="muted small">updated {{ date.fromisoformat(summary.date).strftime("%d %b") }}</span>{% endif %}</div>
+  {% if summary and summary.parts.headline %}<p class="headline">{{ summary.parts.headline }}</p>
+  {% elif not summary and coach_on %}<p class="muted small">Your coach is writing your summary. Refresh in a moment.</p>{% endif %}
+
+  <svg class="spark" viewBox="0 0 300 64" preserveAspectRatio="none" role="img" aria-label="Fitness and fatigue, last 6 weeks">
+    <polyline class="fat" points="{{ chart.fat }}"/><polyline class="fit" points="{{ chart.fit }}"/>
+  </svg>
+  <div class="legend"><span class="k fit">Fitness</span><span class="k fat">Fatigue</span><span class="muted">last 6 weeks</span></div>
+
+  <div class="chips">
+    <span class="chip"><b>{{ "%g" | format(m.km_last_7_days) }} km</b> this week
+      {% set dk = m.km_last_7_days - m.km_previous_7_days %}{% if dk|abs >= 0.1 %}<i class="{{ 'up' if dk > 0 else 'down' }}">{{ "%+.1f" | format(dk) }}</i>{% endif %}</span>
+    <span class="chip"><b>{{ "%g" | format(m.longest_run_last_28_days_km) }} km</b> longest</span>
+    {% if m.metres_per_heartbeat_last_28_days %}<span class="chip"><b>{{ "%.2f" | format(m.metres_per_heartbeat_last_28_days) }} m</b> per heartbeat
+      {% if m.metres_per_heartbeat_previous_28_days %}{% set de = m.metres_per_heartbeat_last_28_days - m.metres_per_heartbeat_previous_28_days %}{% if de|abs >= 0.005 %}<i class="{{ 'up' if de > 0 else 'down' }}">{{ "%+.2f" | format(de) }}</i>{% endif %}{% endif %}</span>{% endif %}
+  </div>
+
+  {% if summary %}{% set c = summary.parts %}
+  {% if c.better %}<h3 class="sec better">Getting better</h3><ul class="pts better">{% for x in c.better %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+  {% if c.watch %}<h3 class="sec watch">Keep an eye on</h3><ul class="pts watch">{% for x in c.watch %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+  {% if c.next %}<p class="next"><b>Next few days</b>{{ c.next }}</p>{% endif %}
+  {% endif %}
+</section>
+
+{% if recent %}
+<section class="card recent">
+  <span class="eyebrow">Recent runs</span>
+  <ul>{% for r in recent %}
+    <li><span class="rdate">{{ date.fromisoformat(r.date).strftime("%a %d %b") }}</span>
+      <span><b>{{ "%g" | format(r.km) }} km</b> · {{ r.pace }}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}</span>
+      <a class="strava-link" href="https://www.strava.com/activities/{{ r.id }}" target="_blank" rel="noopener">View on Strava</a></li>
+  {% endfor %}</ul>
+</section>
 {% endif %}
 {% if coach_on %}<p class="muted small">Coach notes for each day appear the evening before. The summary updates each evening after days you trained.</p>{% endif %}
 

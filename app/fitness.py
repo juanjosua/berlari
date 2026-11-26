@@ -78,3 +78,11 @@ def metrics(acts: list[dict], threshold_pace_s: float, today: date) -> dict:
         "metres_per_heartbeat_last_28_days": _efficiency(last28),
         "metres_per_heartbeat_previous_28_days": _efficiency(prev28),
     }
+
+
+def spark(values: list[float], top: float, w: int = 300, h: int = 64) -> str:
+    """SVG polyline points for a small chart (y flipped, 4px padding top and bottom)."""
+    if len(values) < 2:
+        return ""
+    step = w / (len(values) - 1)
+    return " ".join(f"{i * step:.1f},{h - 4 - (v / top) * (h - 8):.1f}" for i, v in enumerate(values))

@@ -157,6 +157,7 @@ def show_plan(request: Request, background: BackgroundTasks):
     return templates.TemplateResponse(request, "plan.html", {
         "user": user, "plan": saved, "weeks": weeks, "today": t.isoformat(), "coach_on": coach.enabled(),
         "summary": db.get_summary(user["id"]), "m": service.current_metrics(user["id"], saved),
+        "chart": service.chart(user["id"], saved), "recent": service.recent_runs(user["id"]),
         "date": date, "days_left": (date.fromisoformat(saved["params"]["event_date"]) - t).days})
 
 

@@ -1,5 +1,6 @@
 """Glue shared by the web routes, the Strava webhook and the nightly job.
 Every LLM result is saved; nothing here regenerates text that already exists."""
+import json
 import logging
 from datetime import date, timedelta
 from functools import wraps
@@ -125,8 +126,22 @@ def refresh_summary(uid: int, force: bool = False) -> None:
     m = fitness.metrics(acts, threshold_pace(saved["stats"]), today())
     week_ago = (today() - timedelta(days=7)).isoformat()
     recent = [a["data"] | {"date": a["date"]} for a in acts if a["date"] >= week_ago]
-    text = coach.daily_summary(m, recent, target(saved), prev["text"] if prev else None)
-    db.save_summary(uid, today().isoformat(), text, len(acts), m)
+    parts = coach.daily_summary(m, recent, target(saved), prev["text"] if prev else None)
+    db.save_summary(uid, today().isoformat(), json.dumps(parts), len(acts), m)
+
+
+def recent_runs(uid: int, n: int = 5) -> list[dict]:
+    return [a["data"] | {"id": a["id"], "date": a["date"]} for a in db.get_activities(uid)[-n:]][::-1]
+
+
+def chart(uid: int, saved: dict) -> dict:
+    """Fitness and fatigue over the last 6 weeks as SVG polyline points."""
+    s = fitness.series(db.get_activities(uid), threshold_pace(saved["stats"]), today())
+    days = [(today() - timedelta(days=i)).isoformat() for i in range(41, -1, -1)]
+    fit = [s.get(d, {}).get("fitness", 0) for d in days]
+    fat = [s.get(d, {}).get("fatigue", 0) for d in days]
+    top = max(fit + fat + [1])
+    return {"fit": fitness.spark(fit, top), "fat": fitness.spark(fat, top)}
 
 
 @coach_task

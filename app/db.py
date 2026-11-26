@@ -94,7 +94,11 @@ def get_activities(uid, since: str = "") -> list[dict]:
 def get_summary(uid) -> dict | None:
     with conn() as c:
         row = c.execute("SELECT * FROM summaries WHERE user_id=?", (uid,)).fetchone()
-    return {**dict(row), "metrics": json.loads(row["metrics"])} if row else None
+    if not row:
+        return None
+    text = row["text"] or ""
+    parts = json.loads(text) if text.startswith("{") else {"headline": "", "better": [], "watch": [], "next": text}
+    return {**dict(row), "metrics": json.loads(row["metrics"]), "parts": parts}
 
 
 def save_summary(uid, day: str, text: str, n_acts: int, metrics: dict) -> None:

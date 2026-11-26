@@ -28,7 +28,7 @@ def test_coach_rules_and_webhook(monkeypatch):
     clock = {"today": DAY0}
     monkeypatch.setattr(service, "today", lambda: clock["today"])
     calls = []
-    monkeypatch.setattr(coach, "daily_summary", lambda m, r, p, prev: calls.append(("sum", m)) or f"Summary {len(calls)}")
+    monkeypatch.setattr(coach, "daily_summary", lambda m, r, p, prev: calls.append(("sum", m)) or {"headline": f"Summary {len(calls)}", "better": ["Base growing"], "watch": [], "next": "Easy days"})
     monkeypatch.setattr(coach, "explain_days",
                         lambda days, ctx: calls.append(("why", [d["date"] for d in days])) or
                         {d["date"]: f"why {d['kind']}" for d in days})
@@ -47,7 +47,8 @@ def test_coach_rules_and_webhook(monkeypatch):
 
     # Plan creation: one summary, notes only for today + tomorrow (not weeks ahead)
     page = c.get("/plan").text
-    assert "Summary 1" in page and "Fitness" in page
+    assert "Summary 1" in page and "Fitness" in page and "Base growing" in page
+    assert "View on Strava" in page and "strava.com/activities/0" in page  # recent runs list
     assert count("sum") == 1 and count("why") == 1
     assert calls[1][1] == [DAY0.isoformat(), (DAY0 + timedelta(days=1)).isoformat()]
     # Refreshing never calls the LLM again
