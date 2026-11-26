@@ -46,7 +46,7 @@ def days_with_runs(uid: int, saved: dict) -> list[dict]:
     first = saved["days"][0]["date"] if saved["days"] else ""
     runs: dict[str, list[dict]] = {}
     for a in db.get_activities(uid, first):
-        runs.setdefault(a["date"], []).append(a["data"])
+        runs.setdefault(a["date"], []).append(a["data"] | {"id": a["id"]})
     t = today().isoformat()
     out = []
     for d in saved["days"]:

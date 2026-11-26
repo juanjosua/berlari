@@ -44,3 +44,11 @@ def test_login_plan_forget(monkeypatch):
     c.post("/forget")
     assert db.get_user(42) is None
     os.remove(os.environ["BERLARI_DB"])
+
+
+def test_brand_assets_and_privacy():
+    c = TestClient(main.app)
+    home = c.get("/").text
+    assert "https://www.strava.com/oauth/authorize" in home and "strava-connect.svg" in home
+    assert "strava-powered-black.svg" in home
+    assert "Delete my data" in c.get("/privacy").text

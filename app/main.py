@@ -33,6 +33,13 @@ templates.env.globals["v"] = int((HERE / "static" / "style.css").stat().st_mtime
 db.init()
 
 
+def login_url(request: Request) -> str:
+    """Strava's brand rules want the Connect button to link straight to strava.com/oauth/authorize."""
+    state = secrets.token_urlsafe(16)
+    request.session["oauth_state"] = state
+    return strava.authorize_url(f"{BASE_URL}/auth/callback", state)
+
+
 def current_user(request: Request) -> dict | None:
     uid = request.session.get("uid")
     return db.get_user(uid) if uid else None
@@ -56,7 +63,7 @@ def parse_goal(s: str) -> int | None:
 def home(request: Request):
     user = current_user(request)
     if not user:
-        return templates.TemplateResponse(request, "home.html")
+        return templates.TemplateResponse(request, "home.html", {"login_url": login_url(request)})
     saved = db.get_plan(user["id"])
     if saved:
         return RedirectResponse("/plan")
@@ -65,19 +72,22 @@ def home(request: Request):
 
 @app.get("/auth/login")
 def login(request: Request):
-    state = secrets.token_urlsafe(16)
-    request.session["oauth_state"] = state
-    return RedirectResponse(strava.authorize_url(f"{BASE_URL}/auth/callback", state))
+    return RedirectResponse(login_url(request))
 
 
 @app.get("/auth/callback")
 def callback(request: Request, code: str = "", state: str = "", error: str = ""):
     if error or not code or state != request.session.pop("oauth_state", None):
-        return templates.TemplateResponse(request, "home.html",
-                                          {"error": "Strava login was cancelled or failed. Try again."})
+        return templates.TemplateResponse(request, "home.html", {
+            "error": "Strava login was cancelled or failed. Try again.", "login_url": login_url(request)})
     tok = strava.exchange_code(code)
     request.session["uid"] = tok["athlete"]["id"]
     return RedirectResponse("/")
+
+
+@app.get("/privacy")
+def privacy(request: Request):
+    return templates.TemplateResponse(request, "privacy.html", {"user": current_user(request)})
 
 
 @app.get("/logout")

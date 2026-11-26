@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+<article class="card prose">
+  <h1>Privacy policy</h1>
+  <p class="muted small">Last updated 27 November 2026</p>
+
+  <p>Berlari is a free, open-source app that builds a running training plan from your Strava activities.
+    This page explains what it stores and how to remove it.</p>
+
+  <h2>What we read from Strava</h2>
+  <p>When you connect, you grant read-only access (<code>read</code>, <code>activity:read_all</code>).
+    We read your name and your running activities: date, distance, moving time, elevation gain, heart rate
+    and per-kilometre splits. We never write to your Strava account.</p>
+
+  <h2>What we store</h2>
+  <ul>
+    <li>Your Strava athlete ID, name and access tokens (to keep you signed in and receive new runs).</li>
+    <li>A summary of each run (the numbers listed above, plus the Strava activity ID).</li>
+    <li>Your training plan, race details and the coach notes, reviews and fitness summaries generated for you.</li>
+  </ul>
+  <p>Data is stored on a single server operated by the Berlari maintainer. Traffic passes through Cloudflare.</p>
+
+  <h2>Who sees it</h2>
+  <p>Only you. Your data is never shown to other users, sold, or used for advertising.</p>
+  <p>To write coach notes, we send training numbers only (distances, paces, heart rate, plan details, no name
+    or Strava ID) to <a href="https://groq.com/privacy-policy/">Groq</a>, which runs the language model.
+    Your data is not used to train AI models by Berlari.</p>
+
+  <h2>Deleting your data</h2>
+  <ul>
+    <li>Use <strong>Delete my data</strong> on the New plan page. Everything about you is removed immediately.</li>
+    <li>Or revoke Berlari in your Strava settings (My Apps). Strava tells us and we delete your data automatically.</li>
+  </ul>
+
+  <h2>Contact</h2>
+  <p>Questions or requests: open an issue at
+    <a href="https://github.com/juanjosua/berlari/issues">github.com/juanjosua/berlari</a>.</p>
+</article>
+{% endblock %}

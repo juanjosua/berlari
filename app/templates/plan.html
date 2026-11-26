@@ -39,7 +39,8 @@
         {% if d.adjusted %}<span class="adjusted">Adjusted: {{ d.adjusted }}</span>{% endif %}
         {% if d.why %}<span class="why">{{ d.why }}</span>{% endif %}
         {% for r in d.runs or [] %}
-        <span class="actual">Ran {{ "%g" | format(r.km) }} km in {{ "%g" | format(r.moving_min) }} min · {{ r.pace }}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}</span>
+        <span class="actual">Ran {{ "%g" | format(r.km) }} km in {{ "%g" | format(r.moving_min) }} min · {{ r.pace }}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}
+          {% if r.id %}· <a class="strava-link" href="https://www.strava.com/activities/{{ r.id }}" target="_blank" rel="noopener">View on Strava</a>{% endif %}</span>
         {% endfor %}
         {% if d.review %}<p class="review">{{ d.review }}</p>{% endif %}
       </div>

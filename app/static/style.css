@@ -1,7 +1,7 @@
 /* Palette taken from the Berlari logo: deep navy gradient, runner orange, white. */
 :root {
   --navy-900: #111236; --navy-700: #1c2264; --navy-500: #2d3aa0;
-  --orange: #ff6930; --orange-dark: #e2541d; --strava: #fc4c02;
+  --orange: #ff6930; --orange-dark: #e2541d;
   --bg: #f3f4fb; --fg: #151838; --muted: #5d6088; --card: #fff; --line: #dfe1f0;
   --easy: #4f6bed; --long: #2d3aa0; --hard: var(--orange); --race: #f5b400;
 }
@@ -29,7 +29,7 @@ h2 { font-size: 1rem; display: flex; justify-content: space-between; margin: 1.5
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
 .hero { text-align: center; padding: 32px 20px; margin-top: 8px; border-radius: 20px; color: #fff;
         background: linear-gradient(135deg, var(--navy-900), var(--navy-700) 55%, var(--navy-500)); }
-.hero img { width: 120px; height: 120px; }
+.hero > img { width: 120px; height: 120px; }
 .hero .muted { color: #c3c7ef; }
 .summary { color: #fff; border: 0;
            background: linear-gradient(135deg, var(--navy-900), var(--navy-700) 55%, var(--navy-500)); }
@@ -39,7 +39,9 @@ h2 { font-size: 1rem; display: flex; justify-content: space-between; margin: 1.5
        background: var(--orange); color: #fff; font: inherit; font-weight: 700;
        text-align: center; text-decoration: none; cursor: pointer; }
 .btn:hover { background: var(--orange-dark); }
-.btn.strava { background: var(--strava); } /* Strava brand guidelines: keep their orange */
+.strava-connect { display: inline-block; margin: 16px 0; } .strava-connect img { display: block; height: 48px; }
+.strava-link { color: #fc5200; font-weight: 700; } /* Strava guidelines: "View on Strava", orange #FC5200 */
+footer .powered { height: 16px; width: auto; } footer p { margin: 8px 0 0; }
 .hero .btn { max-width: 320px; margin: 16px 0; }
 form.card label { display: block; margin-bottom: 14px; font-weight: 600; }
 input, select { display: block; width: 100%; margin-top: 6px; padding: 12px; font: inherit;
@@ -85,3 +87,5 @@ body::before { content: ""; position: fixed; inset: auto 0 0 0; height: 42vh; z-
                        linear-gradient(135deg, var(--navy-900), var(--navy-700) 55%, var(--navy-500)); }
 .day .what .adjusted { color: var(--orange-dark); font-weight: 600; font-size: .85rem; margin-top: 2px; }
 @media (prefers-color-scheme: dark) { .day .what .adjusted { color: var(--orange); } }
+.prose h2 { display: block; font-size: 1.05rem; margin: 1.25rem 0 .25rem; }
+.prose p, .prose li { line-height: 1.55; }

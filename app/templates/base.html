@@ -18,6 +18,12 @@
     {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
     {% block content %}{% endblock %}
   </main>
-  <footer>Powered by Strava · <a href="https://github.com/juanjosua/berlari">Source</a></footer>
+  <footer>
+    <picture>
+      <source srcset="/static/strava-powered-white.svg" media="(prefers-color-scheme: dark)">
+      <img class="powered" src="/static/strava-powered-black.svg" alt="Powered by Strava" height="16">
+    </picture>
+    <p><a href="/privacy">Privacy</a> · <a href="https://github.com/juanjosua/berlari">Source</a></p>
+  </footer>
 </body>
 </html>
