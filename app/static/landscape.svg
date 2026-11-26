@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1440 480" preserveAspectRatio="xMidYMax slice">
+  <!-- Original artwork for Berlari: dusk hills with a winding road. Palette from the logo. -->
+  <defs>
+    <linearGradient id="road" x1="0" y1="1" x2="0" y2="0">
+      <stop offset="0" stop-color="#ff6930"/>
+      <stop offset="1" stop-color="#ff6930" stop-opacity=".35"/>
+    </linearGradient>
+  </defs>
+  <circle cx="1060" cy="190" r="78" fill="#ff6930" opacity=".9"/>
+  <circle cx="1060" cy="190" r="120" fill="#ff6930" opacity=".12"/>
+  <path fill="#2d3aa0" d="M0 300 L120 232 L220 268 L360 172 L470 248 L600 192 L720 262 L860 152 L980 240 L1100 204 L1240 268 L1340 212 L1440 250 V480 H0Z"/>
+  <path fill="#1c2264" d="M0 340 C160 290 280 330 420 302 C560 272 680 322 820 296 C980 268 1120 330 1260 302 C1340 286 1400 300 1440 310 V480 H0Z"/>
+  <path fill="url(#road)" d="M610 480 C690 446 800 424 744 394 C700 370 788 344 846 326 L858 328 C812 348 752 370 792 394 C858 430 772 452 830 480 Z"/>
+  <path fill="#111236" d="M0 410 C200 372 360 418 540 392 C600 384 640 392 660 400 L640 480 H0Z M840 480 L820 404 C880 386 960 396 1100 382 C1250 364 1360 394 1440 386 V480Z"/>
+  <path d="M720 480 C760 450 790 430 768 400 C750 376 800 352 852 328" fill="none" stroke="#fff" stroke-width="3"
+        stroke-dasharray="14 12" opacity=".55"/>
+</svg>

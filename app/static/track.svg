@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 260" preserveAspectRatio="xMaxYMax slice">
+  <!-- Original artwork for Berlari: corner of a running track (lane lines). -->
+  <g fill="none" stroke="#fff" stroke-width="2" opacity=".14">
+    <rect x="150" y="90" width="400" height="260" rx="130"/>
+    <rect x="128" y="68" width="444" height="304" rx="152"/>
+    <rect x="106" y="46" width="488" height="348" rx="174"/>
+    <rect x="84" y="24" width="532" height="392" rx="196"/>
+    <rect x="62" y="2" width="576" height="436" rx="218"/>
+  </g>
+  <rect x="150" y="150" width="70" height="4" fill="#ff6930" opacity=".7" transform="rotate(-90 185 152)"/>
+</svg>
