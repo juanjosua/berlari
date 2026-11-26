@@ -9,11 +9,20 @@
     typical pace {{ s.easy_pace_s | pace }}</p>
 </section>
 
-{% if plan.summary %}
-<section class="card coach"><h2>Your current fitness</h2><p>{{ plan.summary }}</p></section>
+{% macro delta(now, before, color=True) %}{% set d = now - before %}{% if d|abs >= 0.1 %}<small class="{{ ('up' if d > 0 else 'down') if color else '' }}">{{ "%+.1f" | format(d) }}</small>{% endif %}{% endmacro %}
+<section class="tiles" aria-label="Today's training numbers">
+  <div class="tile"><b>{{ m.today.fitness }}</b>{{ delta(m.today.fitness, m.yesterday.fitness) }}<span>Fitness</span></div>
+  <div class="tile"><b>{{ m.today.fatigue }}</b>{{ delta(m.today.fatigue, m.yesterday.fatigue, False) }}<span>Fatigue</span></div>
+  <div class="tile"><b>{{ "%+.1f" | format(m.today.form) }}</b><span>Form ({{ "fresh" if m.today.form > 5 else "tired" if m.today.form < -10 else "balanced" }})</span></div>
+</section>
+<p class="muted small">Change vs yesterday. Fitness = 6-week training load, fatigue = last week's, form = fitness − fatigue.</p>
+
+{% if summary %}
+<section class="card coach"><h2>Your current condition <span class="muted small">updated {{ date.fromisoformat(summary.date).strftime("%d %b") }}</span></h2><p>{{ summary.text }}</p></section>
 {% elif coach_on %}
-<p class="muted small">Your coach is writing a fitness summary and workout notes. Refresh in a moment.</p>
+<p class="muted small">Your coach is writing your fitness summary. Refresh in a moment.</p>
 {% endif %}
+{% if coach_on %}<p class="muted small">Coach notes for each day appear the evening before. The summary updates each evening after days you trained.</p>{% endif %}
 
 {% for week in weeks %}
 <section class="week">
@@ -28,7 +37,7 @@
           {% if d.status %}<em class="badge {{ d.status }}">{{ {"done": "Done", "partial": "Partly done", "extra": "Extra run", "missed": "Missed"}[d.status] }}</em>{% endif %}</strong>
         <span>{{ d.detail }}</span>
         {% if d.why %}<span class="why">{{ d.why }}</span>{% endif %}
-        {% for r in (d.runs or {}).values() %}
+        {% for r in d.runs or [] %}
         <span class="actual">Ran {{ "%g" | format(r.km) }} km in {{ "%g" | format(r.moving_min) }} min · {{ r.pace }}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}</span>
         {% endfor %}
         {% if d.review %}<p class="review">{{ d.review }}</p>{% endif %}

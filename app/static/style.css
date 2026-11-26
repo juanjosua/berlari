@@ -68,3 +68,8 @@ input:focus, select:focus { outline: 2px solid var(--orange); outline-offset: 1p
 .badge.done { background: #1f9d55; } .badge.partial { background: #d98a00; }
 .badge.missed { background: #d93a3a; } .badge.extra { background: var(--navy-500); }
 .day.done, .day.partial, .day.extra { opacity: 1; }
+.tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 12px; }
+.tile { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 10px; text-align: center; }
+.tile b { font-size: 1.35rem; color: var(--fg); }
+.tile small { margin-left: 4px; font-weight: 700; color: var(--muted); } .tile small.up { color: #1f9d55; } .tile small.down { color: #d93a3a; }
+.tile span { display: block; font-size: .75rem; color: var(--muted); }

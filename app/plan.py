@@ -124,11 +124,11 @@ def plan_to_dicts(days: list[Day]) -> list[dict]:
 
 def day_status(day: dict, today: str) -> str | None:
     """done / partial / extra (ran on a rest day) / missed / None (upcoming or rest)."""
-    runs = day.get("runs") or {}
+    runs = day.get("runs") or []
     if runs:
         if day["kind"] == "rest":
             return "extra"
-        km = sum(r["km"] for r in runs.values())
+        km = sum(r["km"] for r in runs)
         return "done" if km >= 0.8 * day["km"] or day["kind"] == "race" else "partial"
     if day["date"] < today and day["kind"] != "rest":
         return "missed"

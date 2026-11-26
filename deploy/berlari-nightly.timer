@@ -1,0 +1,9 @@
+[Unit]
+Description=Run Berlari nightly job at 20:00 Jakarta time
+
+[Timer]
+OnCalendar=*-*-* 20:00:00 Asia/Jakarta
+Persistent=true
+
+[Install]
+WantedBy=timers.target

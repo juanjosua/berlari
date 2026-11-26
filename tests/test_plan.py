@@ -45,7 +45,7 @@ def test_past_event_rejected():
 
 def test_day_status():
     from app.plan import day_status
-    run = {"runs": {"1": {"km": 8.0}}}
+    run = {"runs": [{"km": 8.0}]}
     assert day_status({"date": "2026-11-20", "kind": "easy", "km": 8} | run, "2026-11-25") == "done"
     assert day_status({"date": "2026-11-20", "kind": "long", "km": 16} | run, "2026-11-25") == "partial"
     assert day_status({"date": "2026-11-20", "kind": "rest", "km": 0} | run, "2026-11-25") == "extra"

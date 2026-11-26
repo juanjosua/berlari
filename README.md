@@ -25,6 +25,9 @@ app/
   strava.py      OAuth + activity fetching + token refresh
   plan.py        pure training-plan generator (no I/O, easy to test)
   coach.py       LLM coach text via Groq
+  fitness.py     pure fitness/fatigue/form model
+  service.py     shared glue: notes, summaries, webhook events
+  nightly.py     daily job (coach notes + summaries)
   subscribe.py   one-time Strava webhook registration
   db.py          SQLite helpers
   templates/     Jinja2 pages
@@ -75,12 +78,19 @@ It is a heuristic, not coaching advice. Improvements welcome.
 
 ## AI coach and automatic tracking
 
-- **Coach text** (optional, needs `GROQ_SECRET_KEY`): `app/coach.py` asks a Groq-hosted LLM to write a
-  fitness summary, a one-line "why" for each day (two weeks ahead, one request per week), and a short review
-  after each run. The plan itself stays rule-based; the LLM only explains numbers we computed.
-  Only training numbers are sent, never names.
-- **Automatic tracking**: a Strava webhook (`/strava/webhook`) tells us when a run is uploaded, edited or
-  deleted. The run is attached to that day of the plan and the day is marked done / partly done / missed.
+- **Fitness numbers** (`app/fitness.py`, no LLM): each run gets a load score (running TSS from pace vs threshold).
+  Fitness = 42-day average load, fatigue = 7-day average, form = fitness − fatigue. Shown on the plan page with
+  the change since yesterday, plus weekly km, longest run and metres per heartbeat (aerobic efficiency).
+- **Coach text** (optional, needs `GROQ_SECRET_KEY`, `app/coach.py`): the LLM only explains numbers we computed;
+  only training numbers are sent, never names. Every result is saved, so page refreshes never call the LLM.
+  - *Day notes*: written the evening before (today + tomorrow), using the last 7 days planned vs actual.
+  - *Condition summary*: what changed vs yesterday / last week / four weeks ago. Regenerated at most once a day,
+    only when runs changed since the last summary.
+  - *Run review*: once per day, right after a run arrives.
+- **Nightly job** (`python -m app.nightly`, systemd timer at 20:00 Asia/Jakarta) writes tomorrow's notes and
+  refreshes summaries.
+- **Automatic tracking**: a Strava webhook (`/strava/webhook`) tells us when a run is uploaded, edited or deleted;
+  runs are stored in `activities` and matched to plan days (done / partly done / missed / extra).
   Register the webhook once per Strava app: `python -m app.subscribe` (on the server, with `.env` filled).
 
 ## Contributing

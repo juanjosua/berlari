@@ -13,6 +13,7 @@ if [ ! -f /opt/berlari/.env ]; then
   echo "Created /opt/berlari/.env - fill in STRAVA_CLIENT_ID, STRAVA_CLIENT_SECRET, BASE_URL"
 fi
 chown root:berlari /opt/berlari/.env && chmod 640 /opt/berlari/.env
-cp /opt/berlari/deploy/berlari.service /etc/systemd/system/
+cp /opt/berlari/deploy/berlari.service /opt/berlari/deploy/berlari-nightly.service /opt/berlari/deploy/berlari-nightly.timer /etc/systemd/system/
 systemctl daemon-reload && systemctl enable -q berlari && systemctl restart berlari
+systemctl enable -q --now berlari-nightly.timer
 echo "Berlari running on 127.0.0.1:8000"

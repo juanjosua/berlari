@@ -27,12 +27,19 @@ def init() -> None:
         );
         CREATE TABLE IF NOT EXISTS plans (
             user_id INTEGER PRIMARY KEY REFERENCES users(id),
-            params TEXT, stats TEXT, days TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP,
-            summary TEXT
+            params TEXT, stats TEXT, days TEXT, created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        );
+        CREATE TABLE IF NOT EXISTS activities (
+            id INTEGER PRIMARY KEY,          -- Strava activity id
+            user_id INTEGER, date TEXT,      -- local date of the run
+            km REAL, moving_s INTEGER, avg_hr REAL, data TEXT
+        );
+        CREATE INDEX IF NOT EXISTS activities_user_date ON activities(user_id, date);
+        CREATE TABLE IF NOT EXISTS summaries (
+            user_id INTEGER PRIMARY KEY,     -- latest coach fitness summary per user
+            date TEXT, text TEXT, n_acts INTEGER, metrics TEXT
         );
         """)
-        if "summary" not in [r[1] for r in c.execute("PRAGMA table_info(plans)")]:
-            c.execute("ALTER TABLE plans ADD COLUMN summary TEXT")  # pre-coach databases
 
 
 def save_user(uid, name, access, refresh, expires_at) -> None:
@@ -51,7 +58,7 @@ def get_user(uid) -> dict | None:
 
 def save_plan(uid, params: dict, stats: dict, days: list[dict]) -> None:
     with conn() as c:
-        c.execute("INSERT OR REPLACE INTO plans (user_id, params, stats, days, summary) VALUES (?,?,?,?,NULL)",
+        c.execute("INSERT OR REPLACE INTO plans (user_id, params, stats, days) VALUES (?,?,?,?)",
                   (uid, json.dumps(params), json.dumps(stats), json.dumps(days)))
 
 
@@ -60,12 +67,40 @@ def get_plan(uid) -> dict | None:
         row = c.execute("SELECT * FROM plans WHERE user_id=?", (uid,)).fetchone()
     if not row:
         return None
-    return {**{k: json.loads(row[k]) for k in ("params", "stats", "days")}, "summary": row["summary"]}
+    return {k: json.loads(row[k]) for k in ("params", "stats", "days")}
 
 
-def set_summary(uid, text: str) -> None:
+def save_activity(uid, aid, day: str, run: dict) -> None:
     with conn() as c:
-        c.execute("UPDATE plans SET summary=? WHERE user_id=?", (text, uid))
+        c.execute("INSERT OR REPLACE INTO activities VALUES (?,?,?,?,?,?,?)",
+                  (aid, uid, day, run["km"], round(run["moving_min"] * 60), run.get("avg_hr"), json.dumps(run)))
+
+
+def delete_activity(uid, aid) -> str | None:
+    """Returns the date the activity was on, if we had it."""
+    with conn() as c:
+        row = c.execute("SELECT date FROM activities WHERE id=? AND user_id=?", (aid, uid)).fetchone()
+        c.execute("DELETE FROM activities WHERE id=? AND user_id=?", (aid, uid))
+    return row["date"] if row else None
+
+
+def get_activities(uid, since: str = "") -> list[dict]:
+    with conn() as c:
+        rows = c.execute("SELECT * FROM activities WHERE user_id=? AND date>=? ORDER BY date, id",
+                         (uid, since)).fetchall()
+    return [{**dict(r), "data": json.loads(r["data"])} for r in rows]
+
+
+def get_summary(uid) -> dict | None:
+    with conn() as c:
+        row = c.execute("SELECT * FROM summaries WHERE user_id=?", (uid,)).fetchone()
+    return {**dict(row), "metrics": json.loads(row["metrics"])} if row else None
+
+
+def save_summary(uid, day: str, text: str, n_acts: int, metrics: dict) -> None:
+    with conn() as c:
+        c.execute("INSERT OR REPLACE INTO summaries VALUES (?,?,?,?,?)",
+                  (uid, day, text, n_acts, json.dumps(metrics)))
 
 
 def update_days(uid, fn) -> None:
@@ -91,4 +126,6 @@ def update_days(uid, fn) -> None:
 def delete_user(uid) -> None:
     with conn() as c:
         c.execute("DELETE FROM plans WHERE user_id=?", (uid,))
+        c.execute("DELETE FROM activities WHERE user_id=?", (uid,))
+        c.execute("DELETE FROM summaries WHERE user_id=?", (uid,))
         c.execute("DELETE FROM users WHERE id=?", (uid,))

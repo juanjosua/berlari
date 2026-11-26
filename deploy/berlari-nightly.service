@@ -1,0 +1,11 @@
+[Unit]
+Description=Berlari nightly coach notes and fitness summaries
+
+[Service]
+Type=oneshot
+User=berlari
+WorkingDirectory=/opt/berlari
+EnvironmentFile=/opt/berlari/.env
+Environment=BERLARI_DB=/var/lib/berlari/berlari.db
+Environment=TZ=Asia/Jakarta
+ExecStart=/opt/berlari/.venv/bin/python -m app.nightly

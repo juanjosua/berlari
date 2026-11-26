@@ -18,7 +18,8 @@ def test_login_plan_forget(monkeypatch):
         return {"athlete": {"id": 42}}
 
     now = date.today()
-    runs = [{"start_date": f"{now - timedelta(days=i * 3)}T06:00:00Z", "distance": 8000.0,
+    runs = [{"id": i, "start_date": f"{now - timedelta(days=i * 3)}T06:00:00Z", "distance": 8000.0,
+             "start_date_local": f"{now - timedelta(days=i * 3)}T06:00:00Z",
              "moving_time": 8 * 360, "sport_type": "Run"} for i in range(10)]
     monkeypatch.setattr(strava, "exchange_code", fake_exchange)
     monkeypatch.setattr(strava, "recent_runs", lambda user: runs)

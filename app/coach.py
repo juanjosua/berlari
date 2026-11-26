@@ -2,6 +2,7 @@
 the LLM only explains numbers we already computed. Only training numbers are sent, never names."""
 import json
 import os
+import time
 
 import httpx
 
@@ -26,28 +27,50 @@ def _ask(prompt: str, data: dict) -> dict:
     return json.loads(r.json()["choices"][0]["message"]["content"])
 
 
-def fitness_summary(profile: dict, params: dict) -> str:
-    return _ask(
-        "Summarise this runner's current fitness in 3-4 sentences: volume, consistency, pace trend, "
-        "longest run, and what it means for their target race. "
+def _ask_with_retry(prompt: str, data: dict) -> dict:
+    """Free tier has a tokens-per-minute cap; wait and retry when Groq says 429."""
+    for attempt in range(3):
+        try:
+            return _ask(prompt, data)
+        except httpx.HTTPStatusError as e:
+            if e.response.status_code != 429 or attempt == 2:
+                raise
+            time.sleep(min(float(e.response.headers.get("retry-after", 20)), 60))
+
+
+FITNESS_GLOSSARY = ("fitness = 42-day training load average (higher = fitter); fatigue = 7-day average; "
+                    "form = fitness minus fatigue (negative = tired, positive = fresh). "
+                    "metres_per_heartbeat = distance per heartbeat at running effort (higher = more efficient).")
+
+
+def daily_summary(metrics: dict, recent_runs: list[dict], params: dict, previous: str | None) -> str:
+    return _ask_with_retry(
+        "Write this runner's current physical condition in 4-6 sentences. Say what changed compared with "
+        "yesterday, last week and four weeks ago, using the numbers: fitness, fatigue, form, weekly km, "
+        "longest run, and heart-rate efficiency if present. Explain in plain words what those changes mean "
+        "for their body (aerobic base, endurance, recovery). Be honest: a single day changes little, and if "
+        "something got worse say so kindly. End with what it means for the next few days toward the race. "
+        f"Glossary: {FITNESS_GLOSSARY} "
         'Return JSON {"summary": "..."}.',
-        {"profile": profile, "target": params})["summary"]
+        {"metrics": metrics, "recent_runs": recent_runs, "target": params, "previous_summary": previous})["summary"]
 
 
-def explain_week(days: list[dict], stats: dict, params: dict) -> dict[str, str]:
-    out = _ask(
-        "For each training day, write one sentence (max 25 words) explaining why this session is in the "
-        "plan and how to approach it. For rest days explain why rest matters at that point. "
-        'Return JSON {"YYYY-MM-DD": "sentence", ...} with one key per day.',
-        {"days": [{k: d[k] for k in ("date", "kind", "km", "detail")} for d in days],
-         "runner": stats, "target": params})
+def explain_days(days: list[dict], context: dict) -> dict[str, str]:
+    """One or two upcoming days, written the day before with what happened recently in mind."""
+    out = _ask_with_retry(
+        "For each upcoming training day, write 1-2 sentences (max 40 words): why this session is in the "
+        "plan and how to approach it given how recent training went (missed or extra runs, pace vs plan, "
+        "fatigue/form). For rest days explain why rest matters now. "
+        f"Glossary: {FITNESS_GLOSSARY} "
+        'Return JSON {"YYYY-MM-DD": "text", ...} with one key per upcoming day.',
+        {"upcoming": [{k: d[k] for k in ("date", "kind", "km", "detail")} for d in days], **context})
     return {k: str(v) for k, v in out.items()}
 
 
-def review_session(day: dict, actual: dict, stats: dict, params: dict) -> str:
-    return _ask(
+def review_session(day: dict, actual: dict, context: dict) -> str:
+    return _ask_with_retry(
         "Write a 2-3 sentence review of this completed run versus what was planned that day: "
         "what went well, anything to watch, and a tip for the next sessions. "
+        f"Glossary: {FITNESS_GLOSSARY} "
         'Return JSON {"review": "..."}.',
-        {"planned": {k: day[k] for k in ("kind", "km", "detail")}, "actual": actual,
-         "runner": stats, "target": params})["review"]
+        {"planned": {k: day[k] for k in ("kind", "km", "detail")}, "actual": actual, **context})["review"]

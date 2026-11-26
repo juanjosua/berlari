@@ -1,5 +1,4 @@
 import hashlib
-import logging
 import os
 import secrets
 from datetime import date, timedelta
@@ -15,14 +14,13 @@ from fastapi.staticfiles import StaticFiles  # noqa: E402
 from fastapi.templating import Jinja2Templates  # noqa: E402
 from starlette.middleware.sessions import SessionMiddleware  # noqa: E402
 
-from . import coach, db, strava  # noqa: E402
-from .plan import DISTANCES_KM, build_plan, day_status, fmt_pace, plan_to_dicts  # noqa: E402
+from . import coach, db, service, strava  # noqa: E402
+from .plan import DISTANCES_KM, build_plan, fmt_pace, plan_to_dicts  # noqa: E402
 
 HERE = Path(__file__).parent
 BASE_URL = os.environ.get("BASE_URL", "http://localhost:8000").rstrip("/")
 # Strava echoes this back when we register the webhook; derived so there is nothing extra to configure.
 VERIFY_TOKEN = hashlib.sha256(f"{os.environ['SECRET_KEY']}:strava-webhook".encode()).hexdigest()[:32]
-log = logging.getLogger("berlari")
 
 app = FastAPI(title="Berlari")
 app.add_middleware(SessionMiddleware, secret_key=os.environ["SECRET_KEY"],
@@ -124,47 +122,10 @@ def create_plan(request: Request, background: BackgroundTasks, event_date: str =
     params = {"event_date": event_date, "distance": distance,
               "runs_per_week": runs_per_week, "goal_time": goal_time}
     db.save_plan(user["id"], params, stats.__dict__, plan_to_dicts(days))
-    background.add_task(fill_coach, user["id"], strava.profile_from_runs(runs))
+    service.seed_activities(user["id"], runs)
+    background.add_task(service.refresh_summary, user["id"], force=True)
+    background.add_task(service.ensure_notes, user["id"])
     return RedirectResponse("/plan", status_code=303)
-
-
-_filling: set[int] = set()  # users with a coach fill running, so page refreshes don't stack LLM calls
-
-
-def fill_coach(uid: int, profile: dict | None = None) -> None:
-    """Background: fitness summary (once) + 'why' for each day in the next two weeks."""
-    if not coach.enabled() or uid in _filling:
-        return
-    _filling.add(uid)
-    try:
-        saved = db.get_plan(uid)
-        if not saved:
-            return
-        if profile and not saved["summary"]:
-            try:
-                db.set_summary(uid, coach.fitness_summary(profile, saved["params"]))
-            except Exception:
-                log.exception("fitness summary failed for %s", uid)
-        horizon = (date.today() + timedelta(days=13)).isoformat()
-        weeks: dict[str, list[dict]] = {}
-        for d in saved["days"]:
-            if d["date"] <= horizon and not d.get("why"):
-                monday = date.fromisoformat(d["date"]) - timedelta(days=date.fromisoformat(d["date"]).weekday())
-                weeks.setdefault(monday.isoformat(), []).append(d)
-        for days in weeks.values():
-            try:
-                why = coach.explain_week(days, saved["stats"], saved["params"])
-            except Exception:
-                log.exception("explain_week failed for %s", uid)
-                continue
-
-            def apply(by_date, why=why):
-                for k, text in why.items():
-                    if k in by_date:
-                        by_date[k]["why"] = text
-            db.update_days(uid, apply)
-    finally:
-        _filling.discard(uid)
 
 
 @app.get("/plan")
@@ -175,20 +136,21 @@ def show_plan(request: Request, background: BackgroundTasks):
     saved = db.get_plan(user["id"])
     if not saved:
         return RedirectResponse("/new")
-    today = date.today().isoformat()
-    monday = (date.today() - timedelta(days=date.today().weekday())).isoformat()
-    horizon = (date.today() + timedelta(days=13)).isoformat()
-    days = [d | {"status": day_status(d, today)} for d in saved["days"] if d["date"] >= monday]
-    if any(not d.get("why") for d in days if d["date"] <= horizon):
-        background.add_task(fill_coach, user["id"])
+    t = service.today()
+    monday = (t - timedelta(days=t.weekday())).isoformat()
+    days = [d for d in service.days_with_runs(user["id"], saved) if d["date"] >= monday]
+    soon = {t.isoformat(), (t + timedelta(days=1)).isoformat()}
+    if any(not d.get("why") for d in days if d["date"] in soon):
+        background.add_task(service.ensure_notes, user["id"])  # safety net if the nightly job hasn't run yet
     weeks: list[list[dict]] = []
     for d in days:
         if not weeks or date.fromisoformat(d["date"]).weekday() == 0:
             weeks.append([])
         weeks[-1].append(d)
     return templates.TemplateResponse(request, "plan.html", {
-        "user": user, "plan": saved, "weeks": weeks, "today": today, "coach_on": coach.enabled(),
-        "date": date, "days_left": (date.fromisoformat(saved["params"]["event_date"]) - date.today()).days})
+        "user": user, "plan": saved, "weeks": weeks, "today": t.isoformat(), "coach_on": coach.enabled(),
+        "summary": db.get_summary(user["id"]), "m": service.current_metrics(user["id"], saved),
+        "date": date, "days_left": (date.fromisoformat(saved["params"]["event_date"]) - t).days})
 
 
 # --- Strava webhook: https://developers.strava.com/docs/webhooks/ ---
@@ -203,56 +165,5 @@ def webhook_verify(request: Request):
 
 @app.post("/strava/webhook")
 async def webhook_event(request: Request, background: BackgroundTasks):
-    background.add_task(handle_event, await request.json())
+    background.add_task(service.handle_event, await request.json())
     return {"ok": True}  # Strava wants a 200 within 2 seconds; real work happens in the background
-
-
-def handle_event(ev: dict) -> None:
-    try:
-        _handle_event(ev)
-    except Exception:
-        log.exception("webhook event failed: %s", ev)
-
-
-def _handle_event(ev: dict) -> None:
-    uid = ev.get("owner_id")
-    if ev.get("object_type") == "athlete":
-        if str(ev.get("updates", {}).get("authorized")) == "false":
-            db.delete_user(uid)  # user revoked access on Strava: forget them
-        return
-    user, saved = db.get_user(uid), db.get_plan(uid)
-    if ev.get("object_type") != "activity" or not user or not saved:
-        return
-    aid = str(ev["object_id"])
-
-    def remove(by_date, keep_review=False):
-        for d in by_date.values():
-            if aid in (d.get("runs") or {}):
-                del d["runs"][aid]
-                if not d["runs"] and not keep_review:
-                    d.pop("review", None)
-
-    if ev.get("aspect_type") == "delete":
-        db.update_days(uid, remove)
-        return
-    a = strava.get_activity(user, int(aid))
-    if a.get("sport_type", a.get("type")) not in strava.RUN_TYPES:
-        db.update_days(uid, remove)  # e.g. changed from Run to Walk
-        return
-    day_key, run = a["start_date_local"][:10], strava.run_summary(a)
-    by_date = {d["date"]: d for d in saved["days"]}
-    if day_key not in by_date:
-        return
-
-    def add(by_date):
-        remove(by_date, keep_review=True)  # an edit re-attaches the run without losing its review
-        by_date[day_key].setdefault("runs", {})[aid] = run
-    db.update_days(uid, add)
-
-    day = db.get_plan(uid)["days"]
-    day = next(d for d in day if d["date"] == day_key)
-    if coach.enabled() and not day.get("review"):  # title/description edits shouldn't re-bill the LLM
-        actual = {"runs": list(day["runs"].values()),
-                  "total_km": round(sum(r["km"] for r in day["runs"].values()), 2)}
-        review = coach.review_session(day, actual, saved["stats"], saved["params"])
-        db.update_days(uid, lambda bd: bd[day_key].__setitem__("review", review))

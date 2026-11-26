@@ -92,30 +92,6 @@ def run_summary(a: dict) -> dict:
     return out
 
 
-def profile_from_runs(runs: list[dict]) -> dict:
-    """Richer 12-week picture for the fitness summary."""
-    now = datetime.now(timezone.utc)
-    weekly = [0.0] * 12  # index 0 = most recent week
-    for r in runs:
-        age = (now - datetime.fromisoformat(r["start_date"].replace("Z", "+00:00"))).days // 7
-        if age < 12:
-            weekly[age] += r["distance"] / 1000
-
-    def median_pace(rs):
-        p = [r["moving_time"] / (r["distance"] / 1000) for r in rs if r.get("distance", 0) > 1000]
-        return fmt_pace(statistics.median(p)) if p else None
-
-    half = now - timedelta(weeks=6)
-    old = [r for r in runs if datetime.fromisoformat(r["start_date"].replace("Z", "+00:00")) < half]
-    new = [r for r in runs if r not in old]
-    hrs = [r["average_heartrate"] for r in runs if r.get("average_heartrate")]
-    return {"runs_last_12_weeks": len(runs),
-            "weekly_km_recent_first": [round(w, 1) for w in weekly],
-            "longest_run_km": round(max((r["distance"] for r in runs), default=0) / 1000, 1),
-            "median_pace_weeks_7_12": median_pace(old), "median_pace_last_6_weeks": median_pace(new),
-            "avg_heart_rate": round(statistics.mean(hrs)) if hrs else None}
-
-
 def subscribe_webhook(callback_url: str, verify_token: str) -> dict:
     """One-time: register our webhook with Strava (one subscription per app)."""
     r = httpx.post(f"{API}/push_subscriptions", timeout=30, data={
