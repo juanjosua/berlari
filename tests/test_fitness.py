@@ -39,3 +39,9 @@ def test_efficiency_improves_when_same_pace_costs_fewer_beats():
     acts = [run(d, hr=160) for d in range(30, 56, 3)] + [run(d, hr=145) for d in range(0, 28, 3)]
     m = metrics(acts, THR, TODAY)
     assert m["metres_per_heartbeat_last_28_days"] > m["metres_per_heartbeat_previous_28_days"]
+
+
+def test_changes_are_precomputed_with_direction():
+    m = metrics([run(1, km=20)], THR, TODAY)
+    assert m["change_vs_yesterday"]["fatigue"].startswith("fatigue down")  # decays the day after a hard run
+    assert m["change_vs_week_ago"]["fitness"].startswith("fitness up")

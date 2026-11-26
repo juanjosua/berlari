@@ -62,8 +62,15 @@ def metrics(acts: list[dict], threshold_pace_s: float, today: date) -> dict:
 
     last7, prev7 = _window(acts, today, 7, 0), _window(acts, today, 14, 7)
     last28, prev28 = _window(acts, today, 28, 0), _window(acts, today, 56, 28)
+
+    def change(days_ago):  # pre-computed so the LLM never has to do arithmetic (it gets signs wrong)
+        then = at(days_ago)
+        return {k: f"{k} {'up' if at(0)[k] > then[k] else 'down' if at(0)[k] < then[k] else 'unchanged'} "
+                   f"{abs(at(0)[k] - then[k]):.1f} ({then[k]} -> {at(0)[k]})" for k in ("fitness", "fatigue", "form")}
+
     return {
         "today": at(0), "yesterday": at(1), "week_ago": at(7), "four_weeks_ago": at(28),
+        "change_vs_yesterday": change(1), "change_vs_week_ago": change(7), "change_vs_four_weeks_ago": change(28),
         "km_last_7_days": round(sum(a["km"] for a in last7), 1),
         "km_previous_7_days": round(sum(a["km"] for a in prev7), 1),
         "runs_last_7_days": len(last7),

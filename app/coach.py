@@ -46,10 +46,12 @@ FITNESS_GLOSSARY = ("fitness = 42-day training load average (higher = fitter); f
 def daily_summary(metrics: dict, recent_runs: list[dict], params: dict, previous: str | None) -> str:
     return _ask_with_retry(
         "Write this runner's current physical condition in 4-6 sentences. Say what changed compared with "
-        "yesterday, last week and four weeks ago, using the numbers: fitness, fatigue, form, weekly km, "
+        "yesterday, last week and four weeks ago. Use the change_vs_* entries exactly as written for directions "
+        "(never recompute them), plus weekly km, "
         "longest run, and heart-rate efficiency if present. Explain in plain words what those changes mean "
         "for their body (aerobic base, endurance, recovery). Be honest: a single day changes little, and if "
-        "something got worse say so kindly. End with what it means for the next few days toward the race. "
+        "something got worse say so kindly. End with what it means for the next few days, considering "
+        "days_to_race (taper only in the final 1-3 weeks). "
         f"Glossary: {FITNESS_GLOSSARY} "
         'Return JSON {"summary": "..."}.',
         {"metrics": metrics, "recent_runs": recent_runs, "target": params, "previous_summary": previous})["summary"]

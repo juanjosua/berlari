@@ -67,7 +67,11 @@ def context(uid: int, saved: dict) -> dict:
     recent = [{"date": d["date"], "planned": f"{d['kind']} {d['km']} km", "status": d["status"], "actual": d["runs"]}
               for d in days_with_runs(uid, saved) if lo <= d["date"] < t.isoformat()]
     return {"last_7_days": recent, "metrics": current_metrics(uid, saved),
-            "runner": saved["stats"], "target": saved["params"]}
+            "runner": saved["stats"], "target": target(saved)}
+
+
+def target(saved: dict) -> dict:
+    return saved["params"] | {"days_to_race": (date.fromisoformat(saved["params"]["event_date"]) - today()).days}
 
 
 @coach_task
@@ -104,7 +108,7 @@ def refresh_summary(uid: int, force: bool = False) -> None:
     m = fitness.metrics(acts, threshold_pace(saved["stats"]), today())
     week_ago = (today() - timedelta(days=7)).isoformat()
     recent = [a["data"] | {"date": a["date"]} for a in acts if a["date"] >= week_ago]
-    text = coach.daily_summary(m, recent, saved["params"], prev["text"] if prev else None)
+    text = coach.daily_summary(m, recent, target(saved), prev["text"] if prev else None)
     db.save_summary(uid, today().isoformat(), text, len(acts), m)
 
 
