@@ -79,3 +79,25 @@ def test_admin_only_for_allowlisted_athletes_and_support_page(monkeypatch):
     assert "Runner 501" in page and "Runner 502" in page and "of 10 connected" in page
     assert "github.com/juanjosua/berlari/issues" in TestClient(main.app).get("/support").text
     db.delete_user(501), db.delete_user(502)
+
+
+def test_admin_remove_deauthorizes_and_deletes(monkeypatch):
+    db.init()
+    revoked = []
+    monkeypatch.setattr(strava, "deauthorize", lambda u: revoked.append(u["id"]))
+    monkeypatch.setattr(main, "ADMIN_IDS", {601})
+    db.save_user(602, "Friend <script>", "a", "r", int(time.time()) + 3600)
+    monkeypatch.setattr(strava, "exchange_code", lambda code: (
+        db.save_user(601, "Admin", "a", "r", int(time.time()) + 3600), {"athlete": {"id": 601}})[1])
+    c = TestClient(main.app, follow_redirects=False)
+    state = c.get("/auth/login").headers["location"].split("state=")[1]
+    c.get("/auth/callback", params={"code": "x", "state": state})
+
+    page = c.get("/admin").text
+    assert "<script>" not in page and "Friend &lt;script&gt;" in page  # name escaped
+    assert TestClient(main.app).post("/admin/remove/602").status_code == 404  # not logged in
+    r = c.post("/admin/remove/602")
+    assert r.status_code == 303 and revoked == [602] and db.get_user(602) is None
+    c.post("/admin/remove/601")
+    assert db.get_user(601) is not None  # can't remove yourself
+    db.delete_user(601)

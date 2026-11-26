@@ -11,6 +11,7 @@ from .plan import Stats, fmt_pace
 
 AUTH_URL = "https://www.strava.com/oauth/authorize"
 TOKEN_URL = "https://www.strava.com/oauth/token"
+DEAUTH_URL = "https://www.strava.com/oauth/deauthorize"
 API = "https://www.strava.com/api/v3"
 
 
@@ -90,6 +91,12 @@ def run_summary(a: dict) -> dict:
         out["km_splits"] = [fmt_pace(s["moving_time"] / (s["distance"] / 1000))
                             for s in a["splits_metric"] if s.get("distance", 0) > 500]
     return out
+
+
+def deauthorize(user: dict) -> None:
+    """Revoke our access on Strava, which also frees the athlete's slot in the app's capacity."""
+    r = httpx.post(DEAUTH_URL, data={"access_token": access_token(user)}, timeout=15)
+    r.raise_for_status()
 
 
 def subscribe_webhook(callback_url: str, verify_token: str) -> dict:

@@ -134,3 +134,19 @@ input[type="date"]::-webkit-date-and-time-value { text-align: left; }
 .bar span { display: block; height: 100%; background: var(--orange); }
 .recent li.athlete { flex-direction: column; align-items: flex-start; gap: 2px; }
 .prose .btn { max-width: 360px; }
+.notice { background: color-mix(in srgb, var(--orange) 15%, var(--card)); padding: 10px 12px; border-radius: 8px; }
+
+/* Dusk sky behind the hills: brighter than the cards so they stand out. A fixed layer (not
+   background-attachment: fixed, which iOS Safari ignores). */
+:root { --sky: linear-gradient(180deg, #eef0fb 0%, #e3e7fc 40%, #d9d6f6 65%, #ffd3bf 100%); }
+@media (prefers-color-scheme: dark) {
+  :root { --sky: linear-gradient(180deg, #10123a 0%, #222c86 38%, #4048b0 62%, #8a55a8 82%, #e3805f 100%);
+          --muted: #b4b8e2; }
+  body::before { opacity: .95; }
+}
+html { background: var(--bg); }
+body { background: transparent; }
+body::after { content: ""; position: fixed; inset: 0; z-index: -2; pointer-events: none; background: var(--sky); }
+body::before { opacity: .45; }
+@media (prefers-color-scheme: dark) { body::before { opacity: .95; } }
+.athlete form .danger { margin-top: 4px; }

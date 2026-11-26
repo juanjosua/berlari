@@ -93,7 +93,26 @@ def admin(request: Request):
         raise HTTPException(404)  # don't reveal that the page exists
     rows = db.athletes()
     return templates.TemplateResponse(request, "admin.html", {
-        "user": user, "athletes": rows, "capacity": STRAVA_CAPACITY, "date": date})
+        "user": user, "athletes": rows, "capacity": STRAVA_CAPACITY, "date": date,
+        "msg": request.query_params.get("msg", "")[:120]})
+
+
+@app.post("/admin/remove/{athlete_id}")
+def admin_remove(request: Request, athlete_id: int):
+    """Disconnect an athlete: revoke on Strava (frees a capacity slot) and delete all their data."""
+    user = current_user(request)
+    if not user or user["id"] not in ADMIN_IDS:
+        raise HTTPException(404)
+    if athlete_id == user["id"]:
+        return RedirectResponse("/admin?msg=You+can't+remove+yourself+here", status_code=303)
+    target = db.get_user(athlete_id)
+    if target:
+        try:
+            strava.deauthorize(target)
+        except Exception:
+            service.log.exception("Strava deauthorize failed for %s", athlete_id)  # still delete our copy
+        db.delete_user(athlete_id)
+    return RedirectResponse(f"/admin?msg=Removed+{(target or {}).get('name') or athlete_id}", status_code=303)
 
 
 @app.get("/support")

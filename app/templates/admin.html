@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block content %}
 <h1>Admin</h1>
+{% if msg %}<p class="notice" role="status">{{ msg }}</p>{% endif %}
 {% set n = athletes | length %}
 <section class="card capacity">
   <span class="eyebrow">Strava athlete capacity</span>
@@ -23,6 +24,13 @@
       </span>
       <span class="small muted">{{ a.runs }} runs{% if a.last_run %} · last {{ a.last_run }}{% endif %}
         {% if a.summary_date %} · summary {{ a.summary_date }}{% endif %}</span>
+      {% if a.id != user.id %}
+      {# name goes in a data attribute (HTML-escaped), never inside the JS string: names come from Strava #}
+      <form method="post" action="/admin/remove/{{ a.id }}" data-name="{{ a.name or a.id }}"
+            onsubmit="return confirm('Remove ' + this.dataset.name + '? This disconnects them from Strava and permanently deletes their plan and data.')">
+        <button class="link danger small" type="submit">Remove athlete</button>
+      </form>
+      {% else %}<span class="small muted">(you)</span>{% endif %}
     </li>
   {% else %}<li class="muted">No athletes yet.</li>{% endfor %}</ul>
 </section>
