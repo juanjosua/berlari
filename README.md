@@ -87,6 +87,9 @@ It is a heuristic, not coaching advice. Improvements welcome.
   - *Condition summary*: what changed vs yesterday / last week / four weeks ago. Regenerated at most once a day,
     only when runs changed since the last summary.
   - *Run review*: once per day, right after a run arrives.
+- **Adaptive plan** (`plan.adapt`, rules, no LLM): each evening a long run missed yesterday moves to tomorrow
+  (if there's room), a short week (<80%) trims this week's easy/long runs, and a very tired runner (form < -20)
+  gets tomorrow's hard session swapped for an easy one. Never adds training. Changed days show an "Adjusted" label.
 - **Nightly job** (`python -m app.nightly`, systemd timer at 20:00 Asia/Jakarta) writes tomorrow's notes and
   refreshes summaries.
 - **Automatic tracking**: a Strava webhook (`/strava/webhook`) tells us when a run is uploaded, edited or deleted;

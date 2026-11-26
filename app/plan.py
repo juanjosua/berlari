@@ -133,3 +133,64 @@ def day_status(day: dict, today: str) -> str | None:
     if day["date"] < today and day["kind"] != "rest":
         return "missed"
     return None
+
+
+QUALITY = ("intervals", "tempo")
+EASY_DETAIL = "Easy, conversational effort"
+
+
+def adapt(by_date: dict[str, dict], km_by_date: dict[str, float], today: str, form_tomorrow: float) -> list[str]:
+    """Adjust upcoming days after what actually happened. Runs nightly; mutates by_date in place and
+    returns what changed. Rules (deliberately conservative - never adds training):
+      1. Long run missed yesterday -> moved to tomorrow unless another long run is today or within
+         2 days after tomorrow;
+         a hard session the day after it becomes easy. Otherwise it's dropped.
+      2. Last week under 80% of plan -> this week's easy/long runs shortened (max 40% cut; a moved
+         long run is kept whole).
+      3. Very tired (form below -20) -> tomorrow's hard session becomes easy.
+    Missed hard sessions are simply dropped (never doubled up); running more than planned changes nothing."""
+    t = date.fromisoformat(today)
+    tomorrow, yesterday = (t + timedelta(days=1)).isoformat(), (t - timedelta(days=1)).isoformat()
+    changes: list[str] = []
+
+    def change(d, label, **new):
+        d.update(new)
+        d["adjusted"] = label
+        d.pop("why", None)  # coach note is rewritten for the new session
+        changes.append(f"{d['date']}: {label}")
+
+    y, tm = by_date.get(yesterday), by_date.get(tomorrow)
+    if y and y["kind"] == "long" and not km_by_date.get(yesterday) and not y.get("moved") and not y.get("handled"):
+        y["handled"] = "dropped"
+        # no other long run/race today or within 2 days after tomorrow (no back-to-back long days)
+        near = {(t + timedelta(days=i)).isoformat() for i in (0, 2, 3)}
+        room = not any(by_date[k]["kind"] in ("long", "race") for k in near if k in by_date)
+        if tm and tm["kind"] not in ("long", "race") and room:
+            y["handled"] = "moved"
+            change(tm, f"Long run moved here from {date.fromisoformat(yesterday):%a} (missed)",
+                   kind="long", km=y["km"], detail=y["detail"], moved=True)
+            after = by_date.get((t + timedelta(days=2)).isoformat())
+            if after and after["kind"] in QUALITY:
+                change(after, "Easy instead of hard: the day after a long run", kind="easy", detail=EASY_DETAIL)
+
+    monday = t - timedelta(days=t.weekday())
+    mon = by_date.get(monday.isoformat())
+    prev = [by_date.get((monday - timedelta(days=i)).isoformat()) for i in range(1, 8)]
+    if mon and not mon.get("week_checked") and all(prev):
+        mon["week_checked"] = True
+        planned = sum(d["km"] for d in prev)
+        actual = sum(km_by_date.get(d["date"], 0) for d in prev)
+        actual += sum(d["km"] for d in prev if d.get("handled") == "moved")  # carried over, not lost
+        week = [d for k, d in by_date.items() if monday.isoformat() <= k <= (monday + timedelta(days=6)).isoformat()]
+        total = sum(d["km"] for d in week)
+        if planned and total and actual < 0.8 * planned:
+            f = max(min(1.0, actual * 1.1 / total), 0.6)
+            for d in week:
+                if d["date"] > today and d["kind"] in ("easy", "long") and not d.get("moved") and f < 1:
+                    change(d, f"Shorter: last week you ran {actual:.0f} of {planned:.0f} km",
+                           km=max(round(d["km"] * f, 1), 3.0))
+
+    if form_tomorrow < -20 and tm and tm["kind"] in QUALITY:
+        change(tm, f"Easy instead of {tm['kind']}: you're very tired (form {form_tomorrow:.0f})",
+               kind="easy", detail=EASY_DETAIL)
+    return changes

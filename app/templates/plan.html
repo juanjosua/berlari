@@ -36,6 +36,7 @@
         <strong>{{ d.kind | capitalize }}{% if d.km %} · {{ "%g" | format(d.km) }} km{% endif %}
           {% if d.status %}<em class="badge {{ d.status }}">{{ {"done": "Done", "partial": "Partly done", "extra": "Extra run", "missed": "Missed"}[d.status] }}</em>{% endif %}</strong>
         <span>{{ d.detail }}</span>
+        {% if d.adjusted %}<span class="adjusted">Adjusted: {{ d.adjusted }}</span>{% endif %}
         {% if d.why %}<span class="why">{{ d.why }}</span>{% endif %}
         {% for r in d.runs or [] %}
         <span class="actual">Ran {{ "%g" | format(r.km) }} km in {{ "%g" | format(r.moving_min) }} min · {{ r.pace }}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}</span>

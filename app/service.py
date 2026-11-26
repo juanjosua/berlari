@@ -5,7 +5,7 @@ from datetime import date, timedelta
 from functools import wraps
 
 from . import coach, db, fitness, strava
-from .plan import day_status
+from .plan import adapt, day_status
 
 log = logging.getLogger("berlari")
 _busy: set[tuple[str, int]] = set()  # (task, user) running now: page refreshes don't stack LLM calls
@@ -72,6 +72,23 @@ def context(uid: int, saved: dict) -> dict:
 
 def target(saved: dict) -> dict:
     return saved["params"] | {"days_to_race": (date.fromisoformat(saved["params"]["event_date"]) - today()).days}
+
+
+def adapt_plan(uid: int) -> list[str]:
+    """Nightly, before tomorrow's notes: reshape upcoming days after missed/short runs (rules in plan.adapt)."""
+    saved = db.get_plan(uid)
+    if not saved:
+        return []
+    acts = db.get_activities(uid)
+    km_by_date: dict[str, float] = {}
+    for a in acts:
+        km_by_date[a["date"]] = km_by_date.get(a["date"], 0) + a["km"]
+    form = fitness.metrics(acts, threshold_pace(saved["stats"]), today() + timedelta(days=1))["today"]["form"]
+    changes: list[str] = []
+    db.update_days(uid, lambda by_date: changes.extend(adapt(by_date, km_by_date, today().isoformat(), form)))
+    if changes:
+        log.warning("plan adjusted for user %s: %s", uid, changes)
+    return changes
 
 
 @coach_task
