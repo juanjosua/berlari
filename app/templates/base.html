@@ -5,13 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#111236">
   <title>Berlari</title>
-  <link rel="icon" type="image/png" href="/static/favicon.png">
-  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png">
-  <link rel="stylesheet" href="/static/style.css">
+  <link rel="icon" type="image/png" href="/static/favicon.png?v={{ v }}">
+  <link rel="apple-touch-icon" href="/static/apple-touch-icon.png?v={{ v }}">
+  <link rel="stylesheet" href="/static/style.css?v={{ v }}">
 </head>
 <body>
   <header>
-    <a href="/" class="brand"><img src="/static/favicon.png" alt="">Berlari</a>
+    <a href="/" class="brand"><img src="/static/favicon.png?v={{ v }}" alt="">Berlari</a>
     {% if user %}<nav><a href="/new">New plan</a> <a href="/logout">Log out</a></nav>{% endif %}
   </header>
   <main>

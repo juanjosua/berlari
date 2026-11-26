@@ -25,6 +25,8 @@ app.add_middleware(SessionMiddleware, secret_key=os.environ["SECRET_KEY"],
 app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
 templates = Jinja2Templates(directory=HERE / "templates")
 templates.env.filters["pace"] = fmt_pace
+# Cache-buster for static links: Cloudflare caches /static for hours, file mtime changes on each deploy.
+templates.env.globals["v"] = int((HERE / "static" / "style.css").stat().st_mtime)
 db.init()
 
 
