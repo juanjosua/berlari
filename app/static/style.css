@@ -150,3 +150,5 @@ body::after { content: ""; position: fixed; inset: 0; z-index: -2; pointer-event
 body::before { opacity: .45; }
 @media (prefers-color-scheme: dark) { body::before { opacity: .95; } }
 .athlete form .danger { margin-top: 4px; }
+/* Recent runs: ~6 rows visible, scroll for older ones */
+.recent ul.scroll { max-height: 330px; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }

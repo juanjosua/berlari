@@ -45,8 +45,8 @@
 
 {% if recent %}
 <section class="card recent">
-  <span class="eyebrow">Recent runs</span>
-  <ul>{% for r in recent %}
+  <span class="eyebrow">Recent runs <span class="muted">· {{ recent | length }}</span></span>
+  <ul class="scroll">{% for r in recent %}
     <li><span class="rdate">{{ date.fromisoformat(r.date).strftime("%a %d %b") }}</span>
       <span><b>{{ "%g" | format(r.km) }} km</b> · {{ r.pace }}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}</span>
       <a class="strava-link" href="https://www.strava.com/activities/{{ r.id }}" target="_blank" rel="noopener">View on Strava</a></li>

@@ -130,7 +130,7 @@ def refresh_summary(uid: int, force: bool = False) -> None:
     db.save_summary(uid, today().isoformat(), json.dumps(parts), len(acts), m)
 
 
-def recent_runs(uid: int, n: int = 5) -> list[dict]:
+def recent_runs(uid: int, n: int = 200) -> list[dict]:  # newest first; card scrolls
     return [a["data"] | {"id": a["id"], "date": a["date"]} for a in db.get_activities(uid)[-n:]][::-1]
 
 
