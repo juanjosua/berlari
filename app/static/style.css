@@ -89,3 +89,7 @@ body::before { content: ""; position: fixed; inset: auto 0 0 0; height: 42vh; z-
 @media (prefers-color-scheme: dark) { .day .what .adjusted { color: var(--orange); } }
 .prose h2 { display: block; font-size: 1.05rem; margin: 1.25rem 0 .25rem; }
 .prose p, .prose li { line-height: 1.55; }
+/* iOS Safari: date inputs ignore width and overflow their card unless native styling is dropped */
+input, select { max-width: 100%; min-width: 0; }
+input[type="date"] { -webkit-appearance: none; appearance: none; min-height: 48px; }
+input[type="date"]::-webkit-date-and-time-value { text-align: left; }

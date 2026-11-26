@@ -45,18 +45,14 @@ def current_user(request: Request) -> dict | None:
     return db.get_user(uid) if uid else None
 
 
-def parse_goal(s: str) -> int | None:
-    """'1:59:00' or '25:00' -> seconds. Blank -> None."""
-    s = s.strip()
-    if not s:
+def parse_goal(minutes: str) -> int | None:
+    """Goal time typed as whole minutes (phones show a number pad; no colon needed). Blank -> None."""
+    minutes = minutes.strip()
+    if not minutes:
         return None
-    parts = [int(p) for p in s.split(":")]
-    if not 2 <= len(parts) <= 3 or any(p < 0 for p in parts):
-        raise ValueError("goal time must look like 25:00 or 1:59:00")
-    secs = 0
-    for p in parts:
-        secs = secs * 60 + p
-    return secs or None
+    if not minutes.isdigit() or not 10 <= int(minutes) <= 600:
+        raise ValueError("goal time must be in minutes, between 10 and 600 (e.g. 119 for 1:59)")
+    return int(minutes) * 60
 
 
 @app.get("/")
@@ -117,12 +113,12 @@ def new_plan_form(request: Request):
 
 @app.post("/new")
 def create_plan(request: Request, background: BackgroundTasks, event_date: str = Form(...),
-                distance: str = Form(...), runs_per_week: int = Form(4), goal_time: str = Form("")):
+                distance: str = Form(...), runs_per_week: int = Form(4), goal_minutes: str = Form("")):
     user = current_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
     try:
-        goal_s = parse_goal(goal_time)
+        goal_s = parse_goal(goal_minutes)
         runs = strava.recent_runs(user)
         stats = strava.stats_from_runs(runs)
         days = build_plan(stats, distance, date.fromisoformat(event_date), runs_per_week, goal_s)
@@ -130,7 +126,8 @@ def create_plan(request: Request, background: BackgroundTasks, event_date: str =
         return templates.TemplateResponse(request, "new.html", {
             "user": user, "distances": DISTANCES_KM, "error": str(e)}, status_code=400)
     params = {"event_date": event_date, "distance": distance,
-              "runs_per_week": runs_per_week, "goal_time": goal_time}
+              "runs_per_week": runs_per_week,
+              "goal_time": f"{goal_s // 3600}:{goal_s // 60 % 60:02d}" if goal_s else ""}
     db.save_plan(user["id"], params, stats.__dict__, plan_to_dicts(days))
     service.seed_activities(user["id"], runs)
     background.add_task(service.refresh_summary, user["id"], force=True)

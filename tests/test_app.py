@@ -34,7 +34,7 @@ def test_login_plan_forget(monkeypatch):
     assert c.get("/auth/callback", params={"code": "x", "state": state}).headers["location"] == "/"
 
     event = (now + timedelta(weeks=10)).isoformat()
-    r = c.post("/new", data={"event_date": event, "distance": "10k", "runs_per_week": 4, "goal_time": "50:00"})
+    r = c.post("/new", data={"event_date": event, "distance": "10k", "runs_per_week": 4, "goal_minutes": "50"})
     assert r.status_code == 303
     page = c.get("/plan").text
     assert "Race day" in page and "5:00/km" in page
@@ -52,3 +52,11 @@ def test_brand_assets_and_privacy():
     assert "https://www.strava.com/oauth/authorize" in home and "strava-connect.svg" in home
     assert "strava-powered-black.svg" in home
     assert "Delete my data" in c.get("/privacy").text
+
+
+def test_parse_goal_minutes():
+    import pytest
+    assert main.parse_goal("") is None and main.parse_goal("119") == 119 * 60
+    for bad in ("1:59", "5", "abc", "-30"):
+        with pytest.raises(ValueError):
+            main.parse_goal(bad)
