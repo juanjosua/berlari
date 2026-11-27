@@ -7,7 +7,7 @@ from .i18n import plan_text
 
 RUN_TYPES = ("Run", "TrailRun", "VirtualRun")
 WALK_TYPES = ("Walk", "Hike")
-STRENGTH_TYPES = ("WeightTraining", "Workout", "Crossfit", "Yoga", "Pilates")
+STRENGTH_TYPES = ("WeightTraining", "Crossfit")  # not "Workout": too generic (padel, classes...)
 ACTIVITY_TYPES = RUN_TYPES + WALK_TYPES + STRENGTH_TYPES
 
 LABELS = {  # type: (English, Indonesian)

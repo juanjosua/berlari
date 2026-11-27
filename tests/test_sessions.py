@@ -90,3 +90,7 @@ def test_example_custom_plan_imports(tmp_path, monkeypatch):
         assert False, "bad session type accepted"
     except ValueError:
         pass
+
+
+def test_generic_workout_is_not_counted_as_strength():
+    assert check({"type": "SBW"}, [{"type": "Workout", "km": 0, "moving_min": 110}], True, 190)["state"] == "unverified"
