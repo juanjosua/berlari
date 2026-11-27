@@ -43,6 +43,10 @@ ID = {
     "Coach notes for each day appear the evening before. The summary updates each evening after days you trained.":
         "Catatan pelatih untuk tiap hari muncul malam sebelumnya. Ringkasan diperbarui tiap malam "
         "setelah hari kamu berlatih.",
+    "Custom plan": "Program kustom",
+    "You're following a custom plan. Building a new plan here replaces it.":
+        "Kamu sedang mengikuti program kustom. Membuat program baru di sini akan menggantinya.",
+    "Run": "Lari", "Walk": "Jalan", "Strength": "Strength",
     "Week of": "Minggu", "Adjusted": "Disesuaikan", "Ran": "Lari", "in": "dalam", "min": "mnt",
     "Easy": "Santai", "Long": "Lari jauh", "Intervals": "Interval", "Tempo": "Tempo", "Rest": "Istirahat",
     "Race": "Lomba",

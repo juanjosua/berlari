@@ -76,6 +76,21 @@ Run tests: `pip install pytest && pytest`
 
 It is a heuristic, not coaching advice. Improvements welcome.
 
+## Sessions, variations and custom plans
+
+Each day is a list of sessions (`app/sessions.py`): easy walk, run-walk, easy run, long run, long run-walk,
+tempo, intervals, Norwegian 4x4, strides, bodyweight strength, rest, race. Running sessions get a rotating
+warm-up. Generated plans add strength twice a week; beginners start with run-walk and Norwegian 4x4.
+
+Each session is checked against that day's Strava activities: walk vs run, duration or distance, heart-rate
+cap, km splits at tempo pace, hard efforts for intervals, and four 3-minute high-HR blocks for Norwegian 4x4
+(from the heart-rate stream). Strength counts when logged on Strava as Weight Training; strides and warm-ups
+can't be checked.
+
+Custom plans: write a JSON file (see `examples/bfi-run-2027-half-marathon.json`, built by
+`examples/build_bfi_2027.py`) and load it with `python -m app.import_plan <athlete_id> <file.json>`.
+Custom plans are followed as written (no automatic adjustments).
+
 ## AI coach and automatic tracking
 
 - **Fitness numbers** (`app/fitness.py`, no LLM): each run gets a load score (running TSS from pace vs threshold).

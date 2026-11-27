@@ -1,0 +1,2086 @@
+{
+ "name": "BFI Run 2027 Half Marathon",
+ "event_date": "2027-05-30",
+ "distance": "half",
+ "goal_time": "3:00",
+ "days": [
+  {
+   "date": "2026-11-26",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Pemulihan pasca sesi Norwegian 4x4 kemarin."
+    }
+   ]
+  },
+  {
+   "date": "2026-11-27",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 40,
+     "hr_max": 132,
+     "note": "Jalan cepat 40 menit (HR < 132 bpm) + stretching betis & paha 5 menit."
+    }
+   ]
+  },
+  {
+   "date": "2026-11-28",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran (Glute Bridge, Chair Squat, Calf Raise, Plank)."
+    },
+    {
+     "type": "EW",
+     "minutes": 30,
+     "hr_max": 132,
+     "note": "EW 30 menit (HR < 132 bpm)."
+    }
+   ]
+  },
+  {
+   "date": "2026-11-29",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2026-11-30",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 40,
+     "hr_max": 132,
+     "note": "Jalan cepat 40 menit (HR < 132 bpm)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-01",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran + mobility sendi pergelangan kaki & pinggul 10 menit."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-02",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2026-12-03",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh (jeda 48 jam pemulihan sendi)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-04",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 45,
+     "hr_max": 132,
+     "note": "Jalan cepat 45 menit (HR < 132 bpm)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-05",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    },
+    {
+     "type": "EW",
+     "minutes": 35,
+     "hr_max": 132,
+     "note": "EW 35 menit (HR < 132 bpm)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-06",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-07",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 45,
+     "hr_max": 132,
+     "note": "Jalan cepat 45 menit (HR < 132 bpm)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-08",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-09",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2026-12-10",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-11",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 45,
+     "hr_max": 132,
+     "note": "Jalan cepat 45 menit (HR < 132 bpm)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-12",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    },
+    {
+     "type": "EW",
+     "minutes": 40,
+     "hr_max": 132,
+     "note": "EW 40 menit (HR < 132 bpm)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-13",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-14",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 45,
+     "hr_max": 132,
+     "note": "Jalan cepat 45 menit (selingi jogging sangat pelan 30 detik tiap 5 menit bila kaki nyaman)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-15",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-16",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2026-12-17",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-18",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 45,
+     "hr_max": 132,
+     "note": "Jalan cepat 45–50 menit (selipkan jogging pelan 30 detik tiap 5 menit bila bebas nyeri sendi)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-19",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    },
+    {
+     "type": "EW",
+     "minutes": 40,
+     "hr_max": 132,
+     "note": "EW 40 menit (HR < 132 bpm)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-20",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-21",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 50,
+     "hr_max": 132,
+     "note": "Jalan cepat 50 menit (selipkan jogging pelan 30 detik tiap 5 menit)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-22",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-23",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2026-12-24",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-25",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 45,
+     "hr_max": 132,
+     "note": "Jalan cepat 45 menit."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-26",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    },
+    {
+     "type": "EW",
+     "minutes": 40,
+     "hr_max": 132,
+     "note": "EW 40 menit (HR < 132 bpm)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-27",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-28",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 50,
+     "hr_max": 132,
+     "note": "Jalan cepat 50 menit (selipkan jogging pelan 30 detik tiap 4–5 menit)."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-29",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2026-12-30",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2026-12-31",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh atau jalan santai 20 menit."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-01",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 40,
+     "hr_max": 132,
+     "note": "Jalan cepat 40 menit (HR < 132 bpm)."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-02",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 2–3 putaran (masukkan gerakan Reverse Lunge alternatif)."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-03",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-04",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 40,
+     "note": "Run-Walk 40 menit (2 menit jogging pelan / 2 menit jalan cepat).",
+     "run_min": 2,
+     "walk_min": 2,
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-01-05",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 2–3 putaran (5 gerakan penuh)."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-06",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-01-07",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-08",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit (2 menit jogging pelan / 2 menit jalan cepat).",
+     "run_min": 2,
+     "walk_min": 2,
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-01-09",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 2–3 putaran."
+    },
+    {
+     "type": "LRW",
+     "minutes": 55,
+     "note": "Long Session 55 menit (jalan cepat + jogging santai 1 menit tiap 4 menit).",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-01-10",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-11",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit (2 menit jogging pelan / 2 menit jalan cepat).",
+     "run_min": 2,
+     "walk_min": 2,
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-01-12",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 2–3 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-13",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-01-14",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-15",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit (2 menit jogging pelan / 1,5 menit jalan cepat).",
+     "run_min": 2,
+     "walk_min": 1.5,
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-01-16",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 2–3 putaran."
+    },
+    {
+     "type": "LRW",
+     "minutes": 60,
+     "note": "Long Session 60 menit (kombinasi jogging santai & jalan cepat).",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-01-17",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-18",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45–50 menit (2,5 menit jogging pelan / 1,5 menit jalan cepat).",
+     "run_min": 2.5,
+     "walk_min": 1.5,
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-01-19",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 2–3 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-20",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-01-21",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-22",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit (2 menit jogging pelan / 1,5 menit jalan cepat).",
+     "run_min": 2,
+     "walk_min": 1.5,
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-01-23",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 2–3 putaran."
+    },
+    {
+     "type": "LRW",
+     "minutes": 65,
+     "note": "Long Session 65 menit (jogging pelan & jalan cepat terkontrol).",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-01-24",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-25",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 50,
+     "note": "Run-Walk 50 menit (3 menit jogging pelan / 1,5 menit jalan cepat).",
+     "run_min": 3,
+     "walk_min": 1.5,
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-01-26",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 2–3 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-27",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-01-28",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-01-29",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit (2,5 menit jogging pelan / 1,5 menit jalan cepat).",
+     "run_min": 2.5,
+     "walk_min": 1.5,
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-01-30",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 2–3 putaran."
+    },
+    {
+     "type": "LRW",
+     "minutes": 70,
+     "note": "Long Session 70 menit (jogging pelan & jalan cepat).",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-01-31",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-02-01",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 50,
+     "note": "Run-Walk 50 menit (3 menit jogging pelan / 1 menit jalan cepat).",
+     "run_min": 3,
+     "walk_min": 1,
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-02-02",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-02-03",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-02-04",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-02-05",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit (uji ritme jogging mendekati 8:15–8:30/km, jalan cepat 1 menit tiap 4–5 menit).",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-02-06",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 8,
+     "walk_breaks": true,
+     "note": "Long Run 8 km (selingi jalan cepat 30–60 detik tiap 2 km).",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-02-07",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-02-08",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 50,
+     "note": "Run-Walk 50 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-02-09",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-02-10",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-02-11",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-02-12",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-02-13",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 9,
+     "walk_breaks": true,
+     "note": "Long Run 9 km (walk break 30–60 detik tiap 2 km).",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-02-14",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-02-15",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 50,
+     "note": "Run-Walk 50 menit.",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-02-16",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-02-17",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-02-18",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-02-19",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit.",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-02-20",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 10,
+     "walk_breaks": true,
+     "note": "Long Run 10 km (walk break 30–60 detik tiap 2–2,5 km).",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-02-21",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-02-22",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 50,
+     "note": "Run-Walk 50 menit.",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-02-23",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-02-24",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-02-25",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-02-26",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit.",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-02-27",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran ringan."
+    },
+    {
+     "type": "LONG",
+     "km": 10,
+     "walk_breaks": true,
+     "note": "Long Run 10 km (Checkpoint evaluasi pace ~8:15–8:30/km & kondisi sendi).",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-02-28",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-01",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 50,
+     "note": "Run-Walk 50 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-03-02",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-03",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-03-04",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-05",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-03-06",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 11,
+     "walk_breaks": true,
+     "note": "Long Run 11 km (walk break 30–60 detik tiap 2,5 km).",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-03-07",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-08",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 50,
+     "note": "Run-Walk 50 menit.",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-03-09",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-10",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-03-11",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-12",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit.",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-03-13",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 12,
+     "walk_breaks": true,
+     "note": "Long Run 12 km (walk break 30–60 detik tiap 2,5–3 km).",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-03-14",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-15",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 50,
+     "note": "Run-Walk 50 menit.",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-03-16",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-17",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-03-18",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-19",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit.",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-03-20",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 13,
+     "walk_breaks": true,
+     "note": "Long Run 13 km.",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-03-21",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-22",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 50,
+     "note": "Run-Walk 50 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-03-23",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-24",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-03-25",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-26",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-03-27",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 3,
+     "note": "SBW 3 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 14,
+     "walk_breaks": true,
+     "note": "Long Run 14 km.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-03-28",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-29",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit.",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-03-30",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-03-31",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-04-01",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-02",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 40,
+     "note": "Run-Walk 40 menit.",
+     "warmup": 0
+    },
+    {
+     "type": "STRIDES",
+     "reps": 4,
+     "note": "4x strides ringan (15–20 detik lari mengalir, bukan sprint)."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-03",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 15,
+     "walk_breaks": true,
+     "note": "Long Run 15 km (latih minum air/elektrolit tiap 30–40 menit).",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-04-04",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-05",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit.",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-04-06",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-07",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-04-08",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-09",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 40,
+     "note": "Run-Walk 40 menit.",
+     "warmup": 1
+    },
+    {
+     "type": "STRIDES",
+     "reps": 4,
+     "note": "4x strides ringan (15–20 detik lari mengalir, bukan sprint)."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-10",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 16,
+     "walk_breaks": true,
+     "note": "Long Run 16 km (latih hidrasi/elektrolit tiap 30–40 menit).",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-04-11",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-12",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-04-13",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-14",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-04-15",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-16",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 40,
+     "note": "Run-Walk 40 menit.",
+     "warmup": 2
+    },
+    {
+     "type": "STRIDES",
+     "reps": 4,
+     "note": "4x strides ringan (15–20 detik lari mengalir, bukan sprint)."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-17",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 18,
+     "walk_breaks": true,
+     "note": "Long Run 18 km (Peak jarak terjauh, simulasi nutrisi & ritme aman).",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-04-18",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-19",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 40,
+     "hr_max": 132,
+     "note": "Easy Walk 40 menit (pemulihan aktif pasca peak 18 km)."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-20",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-21",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-04-22",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-23",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 40,
+     "note": "Run-Walk 40 menit.",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-04-24",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 12,
+     "walk_breaks": true,
+     "note": "Long Run 12 km (deload terkontrol agar sendi segar).",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-04-25",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-26",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 45,
+     "note": "Run-Walk 45 menit.",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-04-27",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-28",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-04-29",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-04-30",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 40,
+     "note": "Run-Walk 40 menit.",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-05-01",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 13,
+     "walk_breaks": true,
+     "note": "Long Run 13 km.",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-05-02",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-03",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 40,
+     "note": "Run-Walk 40 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-05-04",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-05",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 + cool-down jalan santai 10–14 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-05-06",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-07",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 40,
+     "note": "Run-Walk 40 menit.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-05-08",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 2,
+     "note": "SBW 2 putaran."
+    },
+    {
+     "type": "LONG",
+     "km": 12,
+     "walk_breaks": true,
+     "note": "Long Run 12 km.",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-05-09",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-10",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 35,
+     "note": "Run-Walk 35–40 menit.",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-05-11",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 1,
+     "note": "SBW 1–2 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-12",
+   "sessions": [
+    {
+     "type": "N4X4",
+     "minutes": 40,
+     "note": "Norwegian 4x4 terakhir (volume terjaga, fokus kualitas tanpa memaksa).",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-05-13",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-14",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 35,
+     "note": "Run-Walk 35 menit.",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-05-15",
+   "sessions": [
+    {
+     "type": "LONG",
+     "km": 8,
+     "walk_breaks": true,
+     "note": "Long Run 8–10 km santai.",
+     "warmup": 0
+    }
+   ]
+  },
+  {
+   "date": "2027-05-16",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-17",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 30,
+     "note": "Run-Walk 30–35 menit.",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-05-18",
+   "sessions": [
+    {
+     "type": "SBW",
+     "rounds": 1,
+     "note": "SBW 1 putaran ringan."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-19",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 30,
+     "note": "Run-Walk 30 menit (selingi 3x 30 detik jogging ritme target 8:00–8:15/km).",
+     "warmup": 1
+    }
+   ]
+  },
+  {
+   "date": "2027-05-20",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-21",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 25,
+     "hr_max": 132,
+     "note": "Easy Walk 25–30 menit."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-22",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 20,
+     "hr_max": 132,
+     "note": "Easy Walk 20 menit santai."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-23",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-24",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 30,
+     "note": "Run-Walk 30 menit.",
+     "warmup": 2
+    },
+    {
+     "type": "SBW",
+     "rounds": 1,
+     "note": "SBW ringan 1 putaran."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-25",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-26",
+   "sessions": [
+    {
+     "type": "RW",
+     "minutes": 25,
+     "note": "Run-Walk 25–30 menit (termasuk 3–4x 30 detik jogging ritme lomba).",
+     "warmup": 2
+    }
+   ]
+  },
+  {
+   "date": "2027-05-27",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat penuh (cek sepatu, kaus kaki, BIB, dan perlengkapan lomba)."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-28",
+   "sessions": [
+    {
+     "type": "EW",
+     "minutes": 15,
+     "hr_max": 132,
+     "note": "Jalan santai 15–20 menit + peregangan ringan."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-29",
+   "sessions": [
+    {
+     "type": "REST",
+     "note": "Istirahat total, hidrasi optimal, asupan karbohidrat seimbang, tidur cukup."
+    }
+   ]
+  },
+  {
+   "date": "2027-05-30",
+   "sessions": [
+    {
+     "type": "RACE",
+     "km": 21.1,
+     "pace": 495,
+     "note": "BFI Run 2027 Half Marathon (21,1 km, COT 3 jam) di ICE BSD City. Mulai konservatif 5 km awal (~8:15–8:30/km), evaluasi ritme setelah km 10 menuju finis < 3 jam."
+    }
+   ]
+  }
+ ]
+}

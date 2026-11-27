@@ -6,7 +6,8 @@ from datetime import date, timedelta
 from functools import wraps
 
 from . import coach, db, fitness, strava
-from .plan import adapt, day_status
+from . import sessions as S
+from .plan import adapt
 
 log = logging.getLogger("berlari")
 _busy: set[tuple[str, int]] = set()  # (task, user) running now: page refreshes don't stack LLM calls
@@ -46,18 +47,25 @@ def seed_activities(uid: int, runs: list[dict]) -> None:
         db.save_activity(uid, a["id"], a["start_date_local"][:10], strava.run_summary(a))
 
 
+def max_hr(uid: int) -> float:
+    """Highest heart rate seen in the athlete's activities (for 'hard effort' checks); 190 if none."""
+    return max((a["data"].get("max_hr") or 0 for a in db.get_activities(uid)), default=0) or 190
+
+
 def days_with_runs(uid: int, saved: dict) -> list[dict]:
-    """Plan days with that day's Strava runs and a done/partial/missed status attached."""
+    """Plan days with that day's Strava activities, a check per planned session and a day status."""
     first = saved["days"][0]["date"] if saved["days"] else ""
     runs: dict[str, list[dict]] = {}
     for a in db.get_activities(uid, first):
         runs.setdefault(a["date"], []).append(a["data"] | {"id": a["id"]})
-    t = today().isoformat()
+    t, mhr = today().isoformat(), max_hr(uid)
     out = []
     for d in saved["days"]:
-        d = d | {"runs": runs.get(d["date"], [])}
-        d["status"] = day_status(d, t)
-        out.append(d)
+        acts, past = runs.get(d["date"], []), d["date"] < t
+        sess = d.get("sessions") or S.from_legacy(d)
+        checks = [S.check(s, acts, past, mhr) for s in sess]
+        out.append(d | {"runs": acts, "sessions": sess, "checks": checks,
+                        "status": S.day_state(checks, acts, sess, past)})
     return out
 
 
@@ -69,7 +77,7 @@ def context(uid: int, saved: dict) -> dict:
     """What the coach gets to know: last 7 days planned vs actual, plus fitness numbers."""
     t = today()
     lo = (t - timedelta(days=7)).isoformat()
-    recent = [{"date": d["date"], "planned": f"{d['kind']} {d['km']} km", "status": d["status"], "actual": d["runs"]}
+    recent = [{"date": d["date"], "planned": d["detail"], "status": d["status"], "actual": d["runs"]}
               for d in days_with_runs(uid, saved) if lo <= d["date"] < t.isoformat()]
     return {"last_7_days": recent, "metrics": current_metrics(uid, saved),
             "runner": saved["stats"], "target": target(saved)}
@@ -82,7 +90,7 @@ def target(saved: dict) -> dict:
 def adapt_plan(uid: int) -> list[str]:
     """Nightly, before tomorrow's notes: reshape upcoming days after missed/short runs (rules in plan.adapt)."""
     saved = db.get_plan(uid)
-    if not saved:
+    if not saved or saved["params"].get("source") == "custom":  # imported plans are followed as written
         return []
     acts = db.get_activities(uid)
     km_by_date: dict[str, float] = {}
@@ -202,9 +210,18 @@ def _handle_event(ev: dict) -> None:
         _drop_review_if_no_runs(uid, db.delete_activity(uid, aid))
         return
     a = strava.get_activity(user, aid)
-    if a.get("sport_type", a.get("type")) not in strava.RUN_TYPES:
-        _drop_review_if_no_runs(uid, db.delete_activity(uid, aid))  # e.g. changed from Run to Walk
+    kind = a.get("sport_type", a.get("type"))
+    if kind not in S.ACTIVITY_TYPES:
+        _drop_review_if_no_runs(uid, db.delete_activity(uid, aid))  # e.g. changed to a ride
         return
     day_key = a["start_date_local"][:10]
-    db.save_activity(uid, aid, day_key, strava.run_summary(a))
-    review_day(uid, day_key)
+    run = strava.run_summary(a)
+    saved = db.get_plan(uid)
+    planned = next((d.get("sessions") or [] for d in (saved or {}).get("days", []) if d["date"] == day_key), [])
+    if any(s["type"] == "N4X4" for s in planned) and kind in S.RUN_TYPES and a.get("average_heartrate"):
+        stream = strava.hr_stream(user, aid)
+        if stream:
+            run["hard_blocks"] = S.hard_blocks(*stream, threshold=0.85 * max_hr(uid))
+    db.save_activity(uid, aid, day_key, run)
+    if kind not in S.STRENGTH_TYPES:
+        review_day(uid, day_key)

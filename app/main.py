@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates  # noqa: E402
 from jinja2 import pass_context  # noqa: E402
 from starlette.middleware.sessions import SessionMiddleware  # noqa: E402
 
-from . import coach, db, i18n, service, strava  # noqa: E402
+from . import coach, db, i18n, service, sessions, strava  # noqa: E402
 from .plan import DISTANCES_KM, build_plan, fmt_pace, plan_to_dicts  # noqa: E402
 
 HERE = Path(__file__).parent
@@ -47,6 +47,9 @@ templates.env.filters["pace"] = fmt_pace
 templates.env.globals["t"] = pass_context(lambda ctx, s: i18n.t(s, ctx.get("lang", "en")))
 templates.env.globals["ld"] = pass_context(lambda ctx, d, f: i18n.fmt_date(d, f, ctx.get("lang", "en")))
 templates.env.globals["pt"] = pass_context(lambda ctx, s: i18n.plan_text(s, ctx.get("lang", "en")))
+templates.env.globals["slabel"] = pass_context(lambda ctx, s: sessions.label(s, ctx.get("lang", "en")))
+templates.env.globals["stext"] = pass_context(lambda ctx, s: sessions.describe(s, ctx.get("lang", "en")))
+templates.env.globals["swarm"] = pass_context(lambda ctx, s: sessions.warmup(s, ctx.get("lang", "en")))
 # Cache-buster for static links: Cloudflare caches /static for hours, file mtime changes on each deploy.
 templates.env.globals["v"] = int((HERE / "static" / "style.css").stat().st_mtime)
 db.init()

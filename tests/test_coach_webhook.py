@@ -69,7 +69,7 @@ def test_coach_rules_and_webhook(monkeypatch):
     ev = {"object_type": "activity", "object_id": 99, "aspect_type": "create", "owner_id": 7}
     c.post("/strava/webhook", json=ev)
     page = c.get("/plan").text
-    assert "Ran 9 km" in page and "Nice 9.0 km" in page
+    assert "9 km · 54" in page and "Nice 9.0 km" in page
     c.post("/strava/webhook", json=ev | {"aspect_type": "update"})
     assert count("rev") == 1
 
@@ -92,7 +92,7 @@ def test_coach_rules_and_webhook(monkeypatch):
     clock["today"] = DAY0
     c.post("/strava/webhook", json=ev | {"aspect_type": "delete"})
     page = c.get("/plan").text
-    assert "Ran 9 km" not in page and "Nice 9.0 km" not in page
+    assert "9 km · 54" not in page and "Nice 9.0 km" not in page
 
     # Athlete revokes access on Strava -> everything deleted
     c.post("/strava/webhook", json={"object_type": "athlete", "owner_id": 7, "updates": {"authorized": "false"}})

@@ -173,3 +173,22 @@ header { position: relative; z-index: 10; }
 .dd .menu button[aria-current] { color: var(--orange-dark); }
 @media (prefers-color-scheme: dark) { .dd .menu button[aria-current] { color: var(--orange); } }
 .dd .menu .flag { width: 20px; height: 20px; box-shadow: 0 0 0 1px var(--line); }
+
+/* Sessions inside a day */
+.day .what { flex: 1; min-width: 0; }
+.day-badge { align-self: flex-start; margin: 0 0 4px; }
+.sess { display: flex; flex-direction: column; padding: 2px 0 6px; }
+.sess + .sess { border-top: 1px dashed var(--line); padding-top: 6px; }
+.sess span { font-size: .9rem; color: var(--muted); }
+.sess .warm { font-size: .8rem; font-style: italic; }
+.sess .check { font-size: .82rem; font-weight: 600; margin-top: 2px; }
+.sess .check::before { margin-right: 4px; }
+.check.done { color: #1f9d55; } .check.done::before { content: "✓"; }
+.check.partial { color: #d98a00; } .check.partial::before { content: "◐"; }
+.check.missed { color: #d93a3a; } .check.missed::before { content: "✕"; }
+.check.unverified { color: var(--muted); font-weight: 500; } .check.unverified::before { content: "ⓘ"; }
+.sess.t-sbw strong { color: #9b6bd6; } .sess.t-n4x4 strong, .sess.t-int strong, .sess.t-tempo strong { color: var(--orange-dark); }
+@media (prefers-color-scheme: dark) { .sess.t-sbw strong { color: #c4a2f2; } .sess.t-n4x4 strong, .sess.t-int strong, .sess.t-tempo strong { color: var(--orange); } }
+.day.walk { border-left-color: #2bb673; } .day.runwalk { border-left-color: #1fa3a3; }
+.day.n4x4 { border-left-color: var(--hard); } .day.strength { border-left-color: #9b6bd6; }
+.eyebrow.light { color: #ffb38f; }

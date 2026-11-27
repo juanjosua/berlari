@@ -15,10 +15,20 @@ def test_plan_ends_on_race_day_and_starts_today():
     assert len({d.date for d in days}) == len(days)  # one entry per day
 
 
-def test_runs_per_week_respected():
+def test_runs_per_week_respected_and_strength_twice_a_week():
     days = build_plan(STATS, "10k", date(2027, 2, 28), 3, today=date(2026, 11, 23))
     first_week = days[:7]
-    assert sum(d.kind != "rest" for d in first_week) == 3
+    assert sum(d.kind not in ("rest", "strength") for d in first_week) == 3
+    assert sum(any(x["type"] == "SBW" for x in d.sessions) for d in first_week) == 2
+
+
+def test_beginner_gets_run_walk_and_norwegian_4x4_then_progresses():
+    days = build_plan(Stats(6, 4, 560), "half", date(2027, 5, 30), 4, today=date(2026, 11, 23))
+    types = lambda ds: {x["type"] for d in ds for x in d.sessions}  # noqa: E731
+    assert {"RW", "LRW", "N4X4", "SBW"} <= types(days[:14])
+    assert "INT" not in types(days)
+    assert {"EASY", "LONG", "STRIDES"} <= types(days[-60:])
+    assert days[-1].kind == "race" and not any(x["type"] == "SBW" for d in days[-4:] for x in d.sessions)
 
 
 def test_volume_growth_capped_and_taper_drops():
@@ -43,12 +53,3 @@ def test_past_event_rejected():
         build_plan(STATS, "5k", TODAY, 4, today=TODAY)
 
 
-def test_day_status():
-    from app.plan import day_status
-    run = {"runs": [{"km": 8.0}]}
-    assert day_status({"date": "2026-11-20", "kind": "easy", "km": 8} | run, "2026-11-25") == "done"
-    assert day_status({"date": "2026-11-20", "kind": "long", "km": 16} | run, "2026-11-25") == "partial"
-    assert day_status({"date": "2026-11-20", "kind": "rest", "km": 0} | run, "2026-11-25") == "extra"
-    assert day_status({"date": "2026-11-20", "kind": "easy", "km": 8}, "2026-11-25") == "missed"
-    assert day_status({"date": "2026-11-20", "kind": "rest", "km": 0}, "2026-11-25") is None
-    assert day_status({"date": "2026-11-26", "kind": "easy", "km": 8}, "2026-11-25") is None

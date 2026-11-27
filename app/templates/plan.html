@@ -2,13 +2,16 @@
 {% block content %}
 {% set p = plan.params %}{% set s = plan.stats %}
 <section class="card summary">
-  <h1>{{ t({"5k": "5K", "10k": "10K", "half": "Half marathon", "marathon": "Marathon"}[p.distance]) }}
+  {% if p.source == "custom" %}<span class="eyebrow light">{{ t("Custom plan") }}</span>{% endif %}
+  <h1>{{ p.name or t({"5k": "5K", "10k": "10K", "half": "Half marathon", "marathon": "Marathon"}[p.distance]) }}
     · {{ ld(p.event_date, "%d %b %Y") }}</h1>
   <p><strong>{{ days_left }}</strong> {{ t("days to go") }}{% if p.goal_time %} · {{ t("goal") }} {{ p.goal_time }}{% endif %}</p>
   <p class="muted small">{{ t("From Strava") }}: {{ s.weekly_km }} {{ t("km/week") }} · {{ t("longest") }} {{ s.longest_km }} km ·
     {{ t("typical pace") }} {{ s.easy_pace_s | pace }}</p>
 </section>
 
+{% macro act(r) %}{{ t({"Run": "Run", "TrailRun": "Run", "VirtualRun": "Run", "Walk": "Walk", "Hike": "Walk"}.get(r.type or "Run", "Strength")) }}
+  {% if r.km %}{{ "%g" | format(r.km) }} km · {% endif %}{{ "%g" | format(r.moving_min) }} {{ t("min") }}{% if r.km and r.pace %} · {{ r.pace }}{% endif %}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}{% endmacro %}
 {% macro delta(now, before, color=True) %}{% set d = now - before %}{% if d|abs >= 0.1 %}<small class="{{ ('up' if d > 0 else 'down') if color else '' }}">{{ "%+.1f" | format(d) }}</small>{% endif %}{% endmacro %}
 <section class="tiles" aria-label="Today's training numbers">
   <div class="tile"><b>{{ m.today.fitness }}</b>{{ delta(m.today.fitness, m.yesterday.fitness) }}<span>{{ t("Fitness") }}</span></div>
@@ -48,7 +51,7 @@
   <span class="eyebrow">{{ t("Recent runs") }} <span class="muted">· {{ recent | length }}</span></span>
   <ul class="scroll">{% for r in recent %}
     <li><span class="rdate">{{ ld(r.date, "%a %d %b") }}</span>
-      <span><b>{{ "%g" | format(r.km) }} km</b> · {{ r.pace }}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}</span>
+      <span>{{ act(r) }}</span>
       <a class="strava-link" href="https://www.strava.com/activities/{{ r.id }}" target="_blank" rel="noopener">View on Strava</a></li>
   {% endfor %}</ul>
 </section>
@@ -58,19 +61,26 @@
 {% for week in weeks %}
 <section class="week">
   <h2>{{ t("Week of") }} {{ ld(week[0].date, "%d %b") }}
-    <span class="muted">{{ "%.0f" | format(week | sum(attribute="km")) }} km</span></h2>
+    {% set ns = namespace(m=0) %}{% for d in week %}{% for s in d.sessions %}{% if not s.km %}{% set ns.m = ns.m + (s.minutes or 0) %}{% endif %}{% endfor %}{% endfor %}
+    <span class="muted">{% set wk = week | sum(attribute="km") %}{% if wk %}{{ "%.0f" | format(wk) }} km{% endif %}{% if wk and ns.m %} + {% endif %}{% if ns.m %}{{ ns.m }} {{ t("min") }}{% endif %}</span></h2>
   <ol>
     {% for d in week %}
     <li class="day {{ d.kind }} {{ d.status or "" }} {% if d.date == today %}today{% endif %}" {% if d.date == today %}id="today"{% endif %}>
       <div class="when">{{ ld(d.date, "%a %d") }}</div>
       <div class="what">
-        <strong>{{ t(d.kind | capitalize) }}{% if d.km %} · {{ "%g" | format(d.km) }} km{% endif %}
-          {% if d.status %}<em class="badge {{ d.status }}">{{ t({"done": "Done", "partial": "Partly done", "extra": "Extra run", "missed": "Missed"}[d.status]) }}</em>{% endif %}</strong>
-        <span>{{ pt(d.detail) }}</span>
+        {% if d.status %}<em class="badge {{ d.status }} day-badge">{{ t({"done": "Done", "partial": "Partly done", "extra": "Extra run", "missed": "Missed"}[d.status]) }}</em>{% endif %}
+        {% for s in d.sessions %}{% set c = d.checks[loop.index0] %}
+        <div class="sess t-{{ s.type | lower }}">
+          <strong>{{ slabel(s) }}{% if s.km and s.type not in ("N4X4", "RW") %} · {{ "%g" | format(s.km) }} km{% elif s.minutes %} · {{ s.minutes }} {{ t("min") }}{% endif %}</strong>
+          {% if s.type != "REST" or s.note %}<span>{{ stext(s) }}</span>{% endif %}
+          {% if s.warmup is not none %}<span class="warm">{{ swarm(s) }}</span>{% endif %}
+          {% if c.state %}<span class="check {{ c.state }}">{{ c[lang] }}</span>{% endif %}
+        </div>
+        {% endfor %}
         {% if d.adjusted %}<span class="adjusted">{{ t("Adjusted") }}: {{ pt(d.adjusted) }}</span>{% endif %}
         {% if d.why %}<span class="why">{{ d.why }}</span>{% endif %}
         {% for r in d.runs or [] %}
-        <span class="actual">{{ t("Ran") }} {{ "%g" | format(r.km) }} km {{ t("in") }} {{ "%g" | format(r.moving_min) }} {{ t("min") }} · {{ r.pace }}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}
+        <span class="actual">{{ act(r) }}
           {% if r.id %}· <a class="strava-link" href="https://www.strava.com/activities/{{ r.id }}" target="_blank" rel="noopener">View on Strava</a>{% endif %}</span>
         {% endfor %}
         {% if d.review %}<p class="review">{{ d.review }}</p>{% endif %}

@@ -8,6 +8,7 @@ import httpx
 
 from . import db
 from .plan import Stats, fmt_pace
+from .sessions import ACTIVITY_TYPES, RUN_TYPES
 
 AUTH_URL = "https://www.strava.com/oauth/authorize"
 TOKEN_URL = "https://www.strava.com/oauth/token"
@@ -55,6 +56,7 @@ def access_token(user: dict) -> str:
 
 
 def recent_runs(user: dict, weeks: int = 12) -> list[dict]:
+    """Runs, walks and strength sessions (sessions.ACTIVITY_TYPES) from the last `weeks` weeks."""
     after = int((datetime.now(timezone.utc) - timedelta(weeks=weeks)).timestamp())
     headers = {"Authorization": f"Bearer {access_token(user)}"}
     runs, page = [], 1
@@ -63,13 +65,12 @@ def recent_runs(user: dict, weeks: int = 12) -> list[dict]:
                       params={"after": after, "per_page": 100, "page": page}, timeout=20)
         r.raise_for_status()
         batch = r.json()
-        runs += [a for a in batch if a.get("sport_type", a.get("type")) in RUN_TYPES]
+        runs += [a for a in batch if a.get("sport_type", a.get("type")) in ACTIVITY_TYPES]
         if len(batch) < 100 or page >= 5:  # shortcut: caps at 500 activities, plenty for 12 weeks
             return runs
         page += 1
 
 
-RUN_TYPES = ("Run", "TrailRun", "VirtualRun")
 
 
 def get_activity(user: dict, activity_id: int) -> dict:
@@ -81,8 +82,9 @@ def get_activity(user: dict, activity_id: int) -> dict:
 
 def run_summary(a: dict) -> dict:
     """The numbers we keep (and send to the coach) for one activity."""
-    km = a["distance"] / 1000
-    out = {"km": round(km, 2), "moving_min": round(a["moving_time"] / 60, 1),
+    km = (a.get("distance") or 0) / 1000
+    out = {"type": a.get("sport_type", a.get("type", "Run")), "km": round(km, 2),
+           "moving_min": round(a["moving_time"] / 60, 1),
            "pace": fmt_pace(a["moving_time"] / km) if km else None,
            "elev_gain_m": a.get("total_elevation_gain")}
     if a.get("average_heartrate"):
@@ -91,6 +93,20 @@ def run_summary(a: dict) -> dict:
         out["km_splits"] = [fmt_pace(s["moving_time"] / (s["distance"] / 1000))
                             for s in a["splits_metric"] if s.get("distance", 0) > 500]
     return out
+
+
+def hr_stream(user: dict, activity_id: int) -> tuple[list, list] | None:
+    """Heart rate and time samples for one activity, or None without HR data."""
+    r = httpx.get(f"{API}/activities/{activity_id}/streams", timeout=20,
+                  headers={"Authorization": f"Bearer {access_token(user)}"},
+                  params={"keys": "heartrate,time", "key_by_type": "true"})
+    if r.status_code == 404:
+        return None
+    r.raise_for_status()
+    data = r.json()
+    if "heartrate" not in data:
+        return None
+    return data["heartrate"]["data"], data["time"]["data"]
 
 
 def deauthorize(user: dict) -> None:
@@ -109,6 +125,7 @@ def subscribe_webhook(callback_url: str, verify_token: str) -> dict:
 
 def stats_from_runs(runs: list[dict]) -> Stats:
     """Summarise runs into the numbers the plan needs. Works with zero runs (beginner defaults)."""
+    runs = [r for r in runs if r.get("sport_type", r.get("type", "Run")) in RUN_TYPES]
     cutoff = datetime.now(timezone.utc) - timedelta(weeks=4)
     last4 = [r for r in runs if datetime.fromisoformat(r["start_date"].replace("Z", "+00:00")) >= cutoff]
     weekly_km = sum(r["distance"] for r in last4) / 1000 / 4

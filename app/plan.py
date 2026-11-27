@@ -1,6 +1,8 @@
 """Pure training-plan generator. No I/O: give it stats + event, get a list of days back."""
-from dataclasses import dataclass, asdict
+from dataclasses import asdict, dataclass, field
 from datetime import date, timedelta
+
+from .sessions import describe, kind_of
 
 DISTANCES_KM = {"5k": 5.0, "10k": 10.0, "half": 21.0975, "marathon": 42.195}
 # Peak weekly km and taper weeks per distance.
@@ -27,9 +29,15 @@ class Stats:
 @dataclass
 class Day:
     date: str
-    kind: str               # rest | easy | long | intervals | tempo | race
+    kind: str               # main session, for colour: rest|walk|runwalk|easy|long|tempo|intervals|n4x4|strength|race
     km: float
-    detail: str
+    detail: str             # English text of all sessions (used by the coach)
+    sessions: list = field(default_factory=list)
+
+
+def make_day(d: str, sessions: list[dict]) -> Day:
+    km = round(sum(x.get("km") or 0 for x in sessions if x["type"] != "STRIDES"), 1)
+    return Day(d, kind_of(sessions), km, "; ".join(describe(x) for x in sessions), sessions)
 
 
 def fmt_pace(s: float) -> str:
@@ -84,36 +92,53 @@ def build_plan(stats: Stats, distance: str, event: date, runs_per_week: int,
     long_cap = LONG_CAP_KM[distance]
     longest = max(stats.longest_km, 5.0)
 
+    # Beginners (low volume or slow easy pace) start with run-walk and Norwegian 4x4 instead of track intervals.
+    beginner = stats.weekly_km < 12 or stats.easy_pace_s > 450
+    build_weeks = len(vols) - min(TAPER_WEEKS[distance], len(vols))
+    long_dow = run_days[-1]
+    rest_dows = [x for x in range(7) if x not in run_days and x != (long_dow - 1) % 7]
+    easy_dows = [x for x in run_days if x not in (run_days[0], long_dow)]
+    strength_dows = (rest_dows + easy_dows)[:2]  # 2x/week, on rest days first, never the day before the long run
+    rnd5 = lambda x: max(20, int(5 * round(x / 5)))  # noqa: E731
+
     days: list[Day] = []
     for w, vol in enumerate(vols):
-        # Long run ~35% of week, grows ≤ 1.5 km/week from current longest, capped per distance.
+        phase = ("taper" if w >= build_weeks else "base" if w < max(2, build_weeks // 3)
+                 else "peak" if w >= build_weeks - 3 else "build")
+        wu = w % 3  # warm-up variation of the week
+        # Long run ~35% of week, grows <= 1.5 km/week from current longest, capped per distance.
         long_km = round(min(vol * 0.35, longest + 1.5 * (w + 1), long_cap), 1)
         quality_km = round(vol * 0.2, 1)
         n_easy = runs_per_week - 2
         easy_km = round(max((vol - long_km - quality_km) / n_easy, 3.0), 1) if n_easy else 0
-        quality = "intervals" if w % 2 == 0 else "tempo"
+        quality = ("TEMPO" if phase == "taper" else "N4X4" if beginner else ["INT", "TEMPO", "N4X4"][w % 3])
+        run_walk = beginner and phase == "base"
+        rounds = {"base": 2, "build": 3, "peak": 2, "taper": 1}[phase]
         for dow in range(7):
             d = start + timedelta(days=w * 7 + dow)
             if d > event:
                 break
             if d == event:
-                days.append(Day(d.isoformat(), "race", DISTANCES_KM[distance],
-                                f"Race day! Target {fmt_pace(p['race'])}"))
+                days.append(make_day(d.isoformat(), [{"type": "RACE", "km": DISTANCES_KM[distance], "pace": p["race"]}]))
                 break
-            if dow not in run_days:
-                days.append(Day(d.isoformat(), "rest", 0, "Rest or light mobility"))
-            elif dow == run_days[-1]:
-                days.append(Day(d.isoformat(), "long", long_km,
-                                f"Long run, conversational at {fmt_pace(p['easy'])}"))
+            sess: list[dict] = []
+            if dow == long_dow:
+                sess.append({"type": "LRW", "km": long_km, "run_min": 4, "walk_min": 1, "warmup": wu} if run_walk else
+                            {"type": "LONG", "km": long_km, "pace": p["easy"], "warmup": wu})
             elif dow == run_days[0]:
-                if quality == "intervals":
-                    detail = (f"Warm up 2 km, 6×800 m at {fmt_pace(p['interval'])} "
-                              f"with 400 m jog, cool down")
-                else:
-                    detail = f"Warm up 2 km, {max(quality_km - 3, 2):.0f} km at {fmt_pace(p['tempo'])}, cool down"
-                days.append(Day(d.isoformat(), quality, quality_km, detail))
-            else:
-                days.append(Day(d.isoformat(), "easy", easy_km, f"Easy at {fmt_pace(p['easy'])}"))
+                sess.append({"type": quality, "km": quality_km, "warmup": wu,
+                             **({"minutes": 40} if quality == "N4X4" else
+                                {"reps": 6, "pace": p["interval"]} if quality == "INT" else
+                                {"tempo_km": max(round(quality_km) - 3, 2), "pace": p["tempo"]})})
+            elif dow in run_days:
+                sess.append({"type": "RW", "km": easy_km, "minutes": rnd5(easy_km * p["easy"] / 60),
+                             "run_min": 2, "walk_min": 1, "warmup": wu} if run_walk else
+                            {"type": "EASY", "km": easy_km, "pace": p["easy"], "warmup": wu})
+                if phase in ("build", "peak") and dow == easy_dows[-1]:
+                    sess.append({"type": "STRIDES", "reps": 4 if phase == "build" else 6})
+            if dow in strength_dows and (event - d).days > 4:
+                sess.append({"type": "SBW", "rounds": rounds})
+            days.append(make_day(d.isoformat(), sess or [{"type": "REST"}]))
 
     return [d for d in days if d.date >= today.isoformat()]
 
@@ -122,20 +147,7 @@ def plan_to_dicts(days: list[Day]) -> list[dict]:
     return [asdict(d) for d in days]
 
 
-def day_status(day: dict, today: str) -> str | None:
-    """done / partial / extra (ran on a rest day) / missed / None (upcoming or rest)."""
-    runs = day.get("runs") or []
-    if runs:
-        if day["kind"] == "rest":
-            return "extra"
-        km = sum(r["km"] for r in runs)
-        return "done" if km >= 0.8 * day["km"] or day["kind"] == "race" else "partial"
-    if day["date"] < today and day["kind"] != "rest":
-        return "missed"
-    return None
-
-
-QUALITY = ("intervals", "tempo")
+QUALITY = ("intervals", "tempo", "n4x4")
 EASY_DETAIL = "Easy, conversational effort"
 
 
@@ -153,6 +165,13 @@ def adapt(by_date: dict[str, dict], km_by_date: dict[str, float], today: str, fo
     tomorrow, yesterday = (t + timedelta(days=1)).isoformat(), (t - timedelta(days=1)).isoformat()
     changes: list[str] = []
 
+    def strength(d):
+        return [x for x in d.get("sessions") or [] if x["type"] == "SBW"]
+
+    def easy_instead(d, label):
+        change(d, label, kind="easy", detail=EASY_DETAIL,
+               sessions=[{"type": "EASY", "km": d["km"], "note": EASY_DETAIL}] + strength(d))
+
     def change(d, label, **new):
         d.update(new)
         d["adjusted"] = label
@@ -167,11 +186,13 @@ def adapt(by_date: dict[str, dict], km_by_date: dict[str, float], today: str, fo
         room = not any(by_date[k]["kind"] in ("long", "race") for k in near if k in by_date)
         if tm and tm["kind"] not in ("long", "race") and room:
             y["handled"] = "moved"
+            runs = [x for x in y.get("sessions") or [{"type": "LONG", "km": y["km"], "note": y["detail"]}]
+                    if x["type"] != "SBW"]
             change(tm, f"Long run moved here from {date.fromisoformat(yesterday):%a} (missed)",
-                   kind="long", km=y["km"], detail=y["detail"], moved=True)
+                   kind="long", km=y["km"], detail=y["detail"], moved=True, sessions=runs + strength(tm))
             after = by_date.get((t + timedelta(days=2)).isoformat())
             if after and after["kind"] in QUALITY:
-                change(after, "Easy instead of hard: the day after a long run", kind="easy", detail=EASY_DETAIL)
+                easy_instead(after, "Easy instead of hard: the day after a long run")
 
     monday = t - timedelta(days=t.weekday())
     mon = by_date.get(monday.isoformat())
@@ -187,10 +208,13 @@ def adapt(by_date: dict[str, dict], km_by_date: dict[str, float], today: str, fo
             f = max(min(1.0, actual * 1.1 / total), 0.6)
             for d in week:
                 if d["date"] > today and d["kind"] in ("easy", "long") and not d.get("moved") and f < 1:
-                    change(d, f"Shorter: last week you ran {actual:.0f} of {planned:.0f} km",
-                           km=max(round(d["km"] * f, 1), 3.0))
+                    km = max(round(d["km"] * f, 1), 3.0)
+                    sess = [{**x, **({"km": round(x["km"] * km / d["km"], 1)} if x.get("km") else {}),
+                             **({"minutes": max(15, round(x["minutes"] * km / d["km"]))} if x.get("minutes") else {})}
+                            for x in d.get("sessions") or []]
+                    change(d, f"Shorter: last week you ran {actual:.0f} of {planned:.0f} km", km=km,
+                           **({"sessions": sess} if sess else {}))
 
     if form_tomorrow < -20 and tm and tm["kind"] in QUALITY:
-        change(tm, f"Easy instead of {tm['kind']}: you're very tired (form {form_tomorrow:.0f})",
-               kind="easy", detail=EASY_DETAIL)
+        easy_instead(tm, f"Easy instead of {tm['kind']}: you're very tired (form {form_tomorrow:.0f})")
     return changes
