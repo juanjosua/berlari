@@ -1,37 +1,38 @@
 {% extends "base.html" %}
 {% block content %}
-<h1>Admin</h1>
+<h1>{{ t("Admin") }}</h1>
 {% if msg %}<p class="notice" role="status">{{ msg }}</p>{% endif %}
 {% set n = athletes | length %}
 <section class="card capacity">
-  <span class="eyebrow">Strava athlete capacity</span>
-  <p class="headline">{{ n }} of {{ capacity }} connected</p>
+  <span class="eyebrow">{{ t("Strava athlete capacity") }}</span>
+  <p class="headline">{{ n }} {{ t("of") }} {{ capacity }} {{ t("connected") }}</p>
   <div class="bar"><span style="width: {{ [100, (n / capacity * 100) | round] | min }}%"></span></div>
-  {% if n >= capacity %}<p class="small"><b>Full.</b> New athletes can't connect until Strava raises the limit (submit the review).</p>
-  {% elif n >= capacity - 2 %}<p class="small">Almost full: time to submit the Strava review.</p>{% endif %}
+  {% if n >= capacity %}<p class="small"><b>{{ t("Full.") }}</b> {{ t("New athletes can't connect until Strava raises the limit (submit the review).") }}</p>
+  {% elif n >= capacity - 2 %}<p class="small">{{ t("Almost full: time to submit the Strava review.") }}</p>{% endif %}
 </section>
 
 <section class="card recent">
-  <span class="eyebrow">Athletes</span>
+  <span class="eyebrow">{{ t("Athletes") }}</span>
   <ul>{% for a in athletes %}
     <li class="athlete">
-      <span><b>{{ a.name or "(no name)" }}</b>
+      <span><b>{{ a.name or t("(no name)") }}</b>
         <a class="muted small" href="https://www.strava.com/athletes/{{ a.id }}" target="_blank" rel="noopener">#{{ a.id }}</a></span>
       <span class="small">
-        {% if a.params %}{{ {"5k": "5K", "10k": "10K", "half": "Half", "marathon": "Marathon"}[a.params.distance] }}
-          on {{ date.fromisoformat(a.params.event_date).strftime("%d %b %Y") }}
-          · plan since {{ a.plan_created[:10] }}{% else %}<i>no plan yet</i>{% endif %}
+        {% if a.params %}{{ t({"5k": "5K", "10k": "10K", "half": "Half marathon", "marathon": "Marathon"}[a.params.distance]) }}
+          {{ t("on") }} {{ ld(a.params.event_date, "%d %b %Y") }}
+          · {{ t("plan since") }} {{ a.plan_created[:10] }}{% else %}<i>{{ t("no plan yet") }}</i>{% endif %}
       </span>
-      <span class="small muted">{{ a.runs }} runs{% if a.last_run %} · last {{ a.last_run }}{% endif %}
-        {% if a.summary_date %} · summary {{ a.summary_date }}{% endif %}</span>
+      <span class="small muted">{{ a.runs }} {{ t("runs") }}{% if a.last_run %} · {{ t("last") }} {{ a.last_run }}{% endif %}
+        {% if a.summary_date %} · {{ t("summary") }} {{ a.summary_date }}{% endif %}</span>
       {% if a.id != user.id %}
       {# name goes in a data attribute (HTML-escaped), never inside the JS string: names come from Strava #}
       <form method="post" action="/admin/remove/{{ a.id }}" data-name="{{ a.name or a.id }}"
-            onsubmit="return confirm('Remove ' + this.dataset.name + '? This disconnects them from Strava and permanently deletes their plan and data.')">
-        <button class="link danger small" type="submit">Remove athlete</button>
+            data-msg="{{ t('Remove') }} {name}? {{ t('This disconnects them from Strava and permanently deletes their plan and data.') }}"
+            onsubmit="return confirm(this.dataset.msg.replace('{name}', this.dataset.name))">
+        <button class="link danger small" type="submit">{{ t("Remove athlete") }}</button>
       </form>
-      {% else %}<span class="small muted">(you)</span>{% endif %}
+      {% else %}<span class="small muted">{{ t("(you)") }}</span>{% endif %}
     </li>
-  {% else %}<li class="muted">No athletes yet.</li>{% endfor %}</ul>
+  {% else %}<li class="muted">{{ t("No athletes yet.") }}</li>{% endfor %}</ul>
 </section>
 {% endblock %}

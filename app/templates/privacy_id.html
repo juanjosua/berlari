@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<article class="card prose">
+  <h1>Kebijakan privasi</h1>
+  <p class="muted small">Terakhir diperbarui 28 November 2026</p>
+
+  <p>Berlari adalah aplikasi gratis dan open-source yang membuat program latihan lari dari aktivitas Strava kamu.
+    Halaman ini menjelaskan data apa yang disimpan dan cara menghapusnya.</p>
+
+  <h2>Yang kami baca dari Strava</h2>
+  <p>Saat menghubungkan akun, kamu memberi akses baca saja (<code>read</code>, <code>activity:read_all</code>).
+    Kami membaca nama dan aktivitas larimu: tanggal, jarak, waktu bergerak, kenaikan elevasi, detak jantung,
+    dan split per kilometer. Kami tidak pernah menulis apa pun ke akun Strava kamu.</p>
+
+  <h2>Yang kami simpan</h2>
+  <ul>
+    <li>ID atlet Strava, nama, dan token akses (agar kamu tetap masuk dan lari baru bisa diterima).</li>
+    <li>Ringkasan setiap lari (angka-angka di atas, ditambah ID aktivitas Strava).</li>
+    <li>Program latihan, detail lomba, pilihan bahasa, serta catatan pelatih, ulasan, dan ringkasan kebugaran
+      yang dibuat untukmu.</li>
+  </ul>
+  <p>Data disimpan di satu server yang dikelola oleh pengelola Berlari. Lalu lintas melewati Cloudflare.</p>
+
+  <h2>Siapa yang bisa melihatnya</h2>
+  <p>Hanya kamu. Datamu tidak pernah ditampilkan ke pengguna lain, dijual, atau dipakai untuk iklan.</p>
+  <p>Untuk menulis catatan pelatih, kami mengirim angka latihan saja (jarak, pace, detak jantung, detail program,
+    tanpa nama atau ID Strava) ke <a href="https://groq.com/privacy-policy/">Groq</a>, penyedia model bahasa.
+    Berlari tidak memakai datamu untuk melatih model AI.</p>
+
+  <h2>Menghapus datamu</h2>
+  <ul>
+    <li>Pakai <strong>Hapus dataku</strong> di halaman Program baru. Semua data tentangmu langsung dihapus.</li>
+    <li>Atau cabut akses Berlari di pengaturan Strava (My Apps). Strava memberi tahu kami dan datamu otomatis dihapus.</li>
+  </ul>
+
+  <h2>Kontak</h2>
+  <p>Pertanyaan atau permintaan: buka issue di
+    <a href="https://github.com/juanjosua/berlari/issues">github.com/juanjosua/berlari</a>.</p>
+</article>
+{% endblock %}

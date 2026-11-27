@@ -28,11 +28,11 @@ def test_coach_rules_and_webhook(monkeypatch):
     clock = {"today": DAY0}
     monkeypatch.setattr(service, "today", lambda: clock["today"])
     calls = []
-    monkeypatch.setattr(coach, "daily_summary", lambda m, r, p, prev: calls.append(("sum", m)) or {"headline": f"Summary {len(calls)}", "better": ["Base growing"], "watch": [], "next": "Easy days"})
+    monkeypatch.setattr(coach, "daily_summary", lambda m, r, p, prev, lang="en": calls.append(("sum", m)) or {"headline": f"Summary {len(calls)}", "better": ["Base growing"], "watch": [], "next": "Easy days"})
     monkeypatch.setattr(coach, "explain_days",
-                        lambda days, ctx: calls.append(("why", [d["date"] for d in days])) or
+                        lambda days, ctx, lang="en": calls.append(("why", [d["date"] for d in days])) or
                         {d["date"]: f"why {d['kind']}" for d in days})
-    monkeypatch.setattr(coach, "review_session", lambda d, a, ctx: calls.append(("rev",)) or f"Nice {a['total_km']} km")
+    monkeypatch.setattr(coach, "review_session", lambda d, a, ctx, lang="en": calls.append(("rev",)) or f"Nice {a['total_km']} km")
     monkeypatch.setattr(strava, "exchange_code", lambda code: (
         db.save_user(7, "Runner", "a", "r", int(time.time()) + 3600), {"athlete": {"id": 7}})[1])
     monkeypatch.setattr(strava, "recent_runs", lambda u: [run(i, DAY0 - timedelta(days=i * 3 + 1)) for i in range(10)])

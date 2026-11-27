@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block content %}
+<article class="card prose">
+  <h1>Bantuan</h1>
+  <p>Ada yang tidak berfungsi, atau punya ide? Buka issue di GitHub dan kami akan melihatnya:</p>
+  <p><a class="btn" href="https://github.com/juanjosua/berlari/issues" target="_blank" rel="noopener">Laporkan masalah atau usulkan fitur</a></p>
+
+  <h2>Pertanyaan umum</h2>
+  <p><b>"Login Strava dibatalkan atau gagal."</b> Coba lagi dan ketuk Authorize di layar Strava.
+    Untuk saat ini Berlari hanya bisa menghubungkan atlet dalam jumlah terbatas; kalau sudah penuh, coba lagi nanti.</p>
+  <p><b>Programku tidak sesuai kemampuanku.</b> Program dimulai dari lari 12 minggu terakhir di Strava. Kalau kamu
+    baru mulai mencatat lari, buat program baru setelah beberapa minggu data terkumpul.</p>
+  <p><b>Lariku tidak muncul di program.</b> Lari baru masuk otomatis satu atau dua menit setelah sampai di Strava.
+    Hanya aktivitas lari (bukan jalan kaki atau sepeda) pada hari yang ada di programmu yang dicocokkan.</p>
+  <p><b>Kapan catatan pelatih muncul?</b> Catatan tiap hari ditulis malam sebelumnya (pukul 20.00 WIB).
+    Ringkasan kondisimu diperbarui tiap malam setelah hari kamu berlatih.</p>
+  <p><b>Bagaimana cara menghapus dataku?</b> Pakai "Hapus dataku" di halaman Program baru, atau putuskan Berlari
+    di pengaturan Strava. Lihat <a href="/privacy">kebijakan privasi</a>.</p>
+</article>
+{% endblock %}

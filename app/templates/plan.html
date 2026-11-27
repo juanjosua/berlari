@@ -2,75 +2,75 @@
 {% block content %}
 {% set p = plan.params %}{% set s = plan.stats %}
 <section class="card summary">
-  <h1>{{ {"5k": "5K", "10k": "10K", "half": "Half marathon", "marathon": "Marathon"}[p.distance] }}
-    · {{ date.fromisoformat(p.event_date).strftime("%d %b %Y") }}</h1>
-  <p><strong>{{ days_left }}</strong> days to go{% if p.goal_time %} · goal {{ p.goal_time }}{% endif %}</p>
-  <p class="muted small">From Strava: {{ s.weekly_km }} km/week · longest {{ s.longest_km }} km ·
-    typical pace {{ s.easy_pace_s | pace }}</p>
+  <h1>{{ t({"5k": "5K", "10k": "10K", "half": "Half marathon", "marathon": "Marathon"}[p.distance]) }}
+    · {{ ld(p.event_date, "%d %b %Y") }}</h1>
+  <p><strong>{{ days_left }}</strong> {{ t("days to go") }}{% if p.goal_time %} · {{ t("goal") }} {{ p.goal_time }}{% endif %}</p>
+  <p class="muted small">{{ t("From Strava") }}: {{ s.weekly_km }} {{ t("km/week") }} · {{ t("longest") }} {{ s.longest_km }} km ·
+    {{ t("typical pace") }} {{ s.easy_pace_s | pace }}</p>
 </section>
 
 {% macro delta(now, before, color=True) %}{% set d = now - before %}{% if d|abs >= 0.1 %}<small class="{{ ('up' if d > 0 else 'down') if color else '' }}">{{ "%+.1f" | format(d) }}</small>{% endif %}{% endmacro %}
 <section class="tiles" aria-label="Today's training numbers">
-  <div class="tile"><b>{{ m.today.fitness }}</b>{{ delta(m.today.fitness, m.yesterday.fitness) }}<span>Fitness</span></div>
-  <div class="tile"><b>{{ m.today.fatigue }}</b>{{ delta(m.today.fatigue, m.yesterday.fatigue, False) }}<span>Fatigue</span></div>
-  <div class="tile"><b>{{ "%+.1f" | format(m.today.form) }}</b><span>Form ({{ "fresh" if m.today.form > 5 else "tired" if m.today.form < -10 else "balanced" }})</span></div>
+  <div class="tile"><b>{{ m.today.fitness }}</b>{{ delta(m.today.fitness, m.yesterday.fitness) }}<span>{{ t("Fitness") }}</span></div>
+  <div class="tile"><b>{{ m.today.fatigue }}</b>{{ delta(m.today.fatigue, m.yesterday.fatigue, False) }}<span>{{ t("Fatigue") }}</span></div>
+  <div class="tile"><b>{{ "%+.1f" | format(m.today.form) }}</b><span>{{ t("Form") }} ({{ t("fresh" if m.today.form > 5 else "tired" if m.today.form < -10 else "balanced") }})</span></div>
 </section>
-<p class="muted small">Change vs yesterday. Fitness = 6-week training load, fatigue = last week's, form = fitness − fatigue.</p>
+<p class="muted small">{{ t("Change vs yesterday. Fitness = 6-week training load, fatigue = last week's, form = fitness − fatigue.") }}</p>
 
 <section class="card condition">
-  <div class="cond-head"><span class="eyebrow">Your current condition</span>
-    {% if summary %}<span class="muted small">updated {{ date.fromisoformat(summary.date).strftime("%d %b") }}</span>{% endif %}</div>
+  <div class="cond-head"><span class="eyebrow">{{ t("Your current condition") }}</span>
+    {% if summary %}<span class="muted small">{{ t("updated") }} {{ ld(summary.date, "%d %b") }}</span>{% endif %}</div>
   {% if summary and summary.parts.headline %}<p class="headline">{{ summary.parts.headline }}</p>
-  {% elif not summary and coach_on %}<p class="muted small">Your coach is writing your summary. Refresh in a moment.</p>{% endif %}
+  {% elif not summary and coach_on %}<p class="muted small">{{ t("Your coach is writing your summary. Refresh in a moment.") }}</p>{% endif %}
 
   <svg class="spark" viewBox="0 0 300 64" preserveAspectRatio="none" role="img" aria-label="Fitness and fatigue, last 6 weeks">
     <polyline class="fat" points="{{ chart.fat }}"/><polyline class="fit" points="{{ chart.fit }}"/>
   </svg>
-  <div class="legend"><span class="k fit">Fitness</span><span class="k fat">Fatigue</span><span class="muted">last 6 weeks</span></div>
+  <div class="legend"><span class="k fit">{{ t("Fitness") }}</span><span class="k fat">{{ t("Fatigue") }}</span><span class="muted">{{ t("last 6 weeks") }}</span></div>
 
   <div class="chips">
-    <span class="chip"><b>{{ "%g" | format(m.km_last_7_days) }} km</b> this week
+    <span class="chip"><b>{{ "%g" | format(m.km_last_7_days) }} km</b> {{ t("this week") }}
       {% set dk = m.km_last_7_days - m.km_previous_7_days %}{% if dk|abs >= 0.1 %}<i class="{{ 'up' if dk > 0 else 'down' }}">{{ "%+.1f" | format(dk) }}</i>{% endif %}</span>
-    <span class="chip"><b>{{ "%g" | format(m.longest_run_last_28_days_km) }} km</b> longest</span>
-    {% if m.metres_per_heartbeat_last_28_days %}<span class="chip"><b>{{ "%.2f" | format(m.metres_per_heartbeat_last_28_days) }} m</b> per heartbeat
+    <span class="chip"><b>{{ "%g" | format(m.longest_run_last_28_days_km) }} km</b> {{ t("longest") }}</span>
+    {% if m.metres_per_heartbeat_last_28_days %}<span class="chip"><b>{{ "%.2f" | format(m.metres_per_heartbeat_last_28_days) }} m</b> {{ t("per heartbeat") }}
       {% if m.metres_per_heartbeat_previous_28_days %}{% set de = m.metres_per_heartbeat_last_28_days - m.metres_per_heartbeat_previous_28_days %}{% if de|abs >= 0.005 %}<i class="{{ 'up' if de > 0 else 'down' }}">{{ "%+.2f" | format(de) }}</i>{% endif %}{% endif %}</span>{% endif %}
   </div>
 
   {% if summary %}{% set c = summary.parts %}
-  {% if c.better %}<h3 class="sec better">Getting better</h3><ul class="pts better">{% for x in c.better %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
-  {% if c.watch %}<h3 class="sec watch">Keep an eye on</h3><ul class="pts watch">{% for x in c.watch %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
-  {% if c.next %}<p class="next"><b>Next few days</b>{{ c.next }}</p>{% endif %}
+  {% if c.better %}<h3 class="sec better">{{ t("Getting better") }}</h3><ul class="pts better">{% for x in c.better %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+  {% if c.watch %}<h3 class="sec watch">{{ t("Keep an eye on") }}</h3><ul class="pts watch">{% for x in c.watch %}<li>{{ x }}</li>{% endfor %}</ul>{% endif %}
+  {% if c.next %}<p class="next"><b>{{ t("Next few days") }}</b>{{ c.next }}</p>{% endif %}
   {% endif %}
 </section>
 
 {% if recent %}
 <section class="card recent">
-  <span class="eyebrow">Recent runs <span class="muted">· {{ recent | length }}</span></span>
+  <span class="eyebrow">{{ t("Recent runs") }} <span class="muted">· {{ recent | length }}</span></span>
   <ul class="scroll">{% for r in recent %}
-    <li><span class="rdate">{{ date.fromisoformat(r.date).strftime("%a %d %b") }}</span>
+    <li><span class="rdate">{{ ld(r.date, "%a %d %b") }}</span>
       <span><b>{{ "%g" | format(r.km) }} km</b> · {{ r.pace }}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}</span>
       <a class="strava-link" href="https://www.strava.com/activities/{{ r.id }}" target="_blank" rel="noopener">View on Strava</a></li>
   {% endfor %}</ul>
 </section>
 {% endif %}
-{% if coach_on %}<p class="muted small">Coach notes for each day appear the evening before. The summary updates each evening after days you trained.</p>{% endif %}
+{% if coach_on %}<p class="muted small">{{ t("Coach notes for each day appear the evening before. The summary updates each evening after days you trained.") }}</p>{% endif %}
 
 {% for week in weeks %}
 <section class="week">
-  <h2>Week of {{ date.fromisoformat(week[0].date).strftime("%d %b") }}
+  <h2>{{ t("Week of") }} {{ ld(week[0].date, "%d %b") }}
     <span class="muted">{{ "%.0f" | format(week | sum(attribute="km")) }} km</span></h2>
   <ol>
     {% for d in week %}
     <li class="day {{ d.kind }} {{ d.status or "" }} {% if d.date == today %}today{% endif %}" {% if d.date == today %}id="today"{% endif %}>
-      <div class="when">{{ date.fromisoformat(d.date).strftime("%a %d") }}</div>
+      <div class="when">{{ ld(d.date, "%a %d") }}</div>
       <div class="what">
-        <strong>{{ d.kind | capitalize }}{% if d.km %} · {{ "%g" | format(d.km) }} km{% endif %}
-          {% if d.status %}<em class="badge {{ d.status }}">{{ {"done": "Done", "partial": "Partly done", "extra": "Extra run", "missed": "Missed"}[d.status] }}</em>{% endif %}</strong>
-        <span>{{ d.detail }}</span>
-        {% if d.adjusted %}<span class="adjusted">Adjusted: {{ d.adjusted }}</span>{% endif %}
+        <strong>{{ t(d.kind | capitalize) }}{% if d.km %} · {{ "%g" | format(d.km) }} km{% endif %}
+          {% if d.status %}<em class="badge {{ d.status }}">{{ t({"done": "Done", "partial": "Partly done", "extra": "Extra run", "missed": "Missed"}[d.status]) }}</em>{% endif %}</strong>
+        <span>{{ pt(d.detail) }}</span>
+        {% if d.adjusted %}<span class="adjusted">{{ t("Adjusted") }}: {{ pt(d.adjusted) }}</span>{% endif %}
         {% if d.why %}<span class="why">{{ d.why }}</span>{% endif %}
         {% for r in d.runs or [] %}
-        <span class="actual">Ran {{ "%g" | format(r.km) }} km in {{ "%g" | format(r.moving_min) }} min · {{ r.pace }}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}
+        <span class="actual">{{ t("Ran") }} {{ "%g" | format(r.km) }} km {{ t("in") }} {{ "%g" | format(r.moving_min) }} {{ t("min") }} · {{ r.pace }}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}
           {% if r.id %}· <a class="strava-link" href="https://www.strava.com/activities/{{ r.id }}" target="_blank" rel="noopener">View on Strava</a>{% endif %}</span>
         {% endfor %}
         {% if d.review %}<p class="review">{{ d.review }}</p>{% endif %}

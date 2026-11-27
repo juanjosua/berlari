@@ -14,8 +14,6 @@ body { margin: 0; font: 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, sa
        background: var(--bg); color: var(--fg); }
 header { display: flex; justify-content: space-between; align-items: center; padding: 12px 16px;
          background: linear-gradient(135deg, var(--navy-900), var(--navy-700) 60%, var(--navy-500)); color: #fff; }
-header nav a { margin-left: 12px; color: #fff; opacity: .85; text-decoration: none; font-weight: 600; }
-header nav a:hover { opacity: 1; }
 a { color: var(--orange-dark); }
 @media (prefers-color-scheme: dark) { a { color: var(--orange); } }
 .brand { display: flex; align-items: center; gap: 8px; color: #fff; font-weight: 800; font-style: italic;
@@ -152,3 +150,26 @@ body::before { opacity: .45; }
 .athlete form .danger { margin-top: 4px; }
 /* Recent runs: ~6 rows visible, scroll for older ones */
 .recent ul.scroll { max-height: 330px; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px; }
+
+/* Header: language flag + menu dropdowns (native <details>, closes on outside tap via base.html script) */
+header { position: relative; z-index: 10; }
+.hdr-right { display: flex; align-items: center; gap: 6px; }
+.dd { position: relative; }
+.dd summary { list-style: none; display: flex; align-items: center; gap: 4px; padding: 6px 8px; border-radius: 99px;
+              cursor: pointer; color: #fff; min-height: 40px; }
+.dd summary::-webkit-details-marker { display: none; }
+.dd summary:hover, .dd[open] summary { background: rgba(255, 255, 255, .12); }
+.dd summary:focus-visible { outline: 2px solid var(--orange); }
+.flag { width: 24px; height: 24px; border-radius: 50%; object-fit: cover; box-shadow: 0 0 0 2px rgba(255, 255, 255, .85); }
+.caret { width: 0; height: 0; border: 5px solid transparent; border-top-color: #fff; margin-top: 5px; }
+.burger { display: grid; gap: 4px; padding: 4px; } .burger i { display: block; width: 20px; height: 2px; background: #fff; border-radius: 2px; }
+.dd .menu { position: absolute; right: 0; top: calc(100% + 6px); min-width: 210px; white-space: nowrap; padding: 6px; border-radius: 12px;
+            background: var(--card); border: 1px solid var(--line); box-shadow: 0 10px 30px rgba(0, 0, 0, .35); }
+.dd .menu a, .dd .menu button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 10px 12px;
+            border: 0; border-radius: 8px; background: none; color: var(--fg); font: inherit; font-weight: 600;
+            text-align: left; text-decoration: none; cursor: pointer; }
+.dd .menu a:hover, .dd .menu button:hover { background: var(--bg); }
+.dd .menu form { margin: 0; }
+.dd .menu button[aria-current] { color: var(--orange-dark); }
+@media (prefers-color-scheme: dark) { .dd .menu button[aria-current] { color: var(--orange); } }
+.dd .menu .flag { width: 20px; height: 20px; box-shadow: 0 0 0 1px var(--line); }

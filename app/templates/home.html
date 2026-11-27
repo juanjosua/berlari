@@ -2,9 +2,9 @@
 {% block content %}
 <section class="hero">
   <img src="/static/icon-512.png" alt="Berlari logo">
-  <h1>Your training plan, built from your own runs.</h1>
-  <p>Connect Strava, pick your race, and get a day-by-day plan that starts from where you are today.</p>
+  <h1>{{ t("Your training plan, built from your own runs.") }}</h1>
+  <p>{{ t("Connect Strava, pick your race, and get a day-by-day plan that starts from where you are today.") }}</p>
   <a class="strava-connect" href="{{ login_url }}"><img src="/static/strava-connect.svg" alt="Connect with Strava" height="48"></a>
-  <p class="muted small">We only read your activities. You can delete your data at any time.</p>
+  <p class="muted small">{{ t("We only read your activities. You can delete your data at any time.") }}</p>
 </section>
 {% endblock %}

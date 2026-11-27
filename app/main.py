@@ -12,9 +12,10 @@ from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, Request  # no
 from fastapi.responses import JSONResponse, RedirectResponse  # noqa: E402
 from fastapi.staticfiles import StaticFiles  # noqa: E402
 from fastapi.templating import Jinja2Templates  # noqa: E402
+from jinja2 import pass_context  # noqa: E402
 from starlette.middleware.sessions import SessionMiddleware  # noqa: E402
 
-from . import coach, db, service, strava  # noqa: E402
+from . import coach, db, i18n, service, strava  # noqa: E402
 from .plan import DISTANCES_KM, build_plan, fmt_pace, plan_to_dicts  # noqa: E402
 
 HERE = Path(__file__).parent
@@ -26,8 +27,26 @@ app = FastAPI(title="Berlari")
 app.add_middleware(SessionMiddleware, secret_key=os.environ["SECRET_KEY"],
                    https_only=BASE_URL.startswith("https"), max_age=60 * 60 * 24 * 30)
 app.mount("/static", StaticFiles(directory=HERE / "static"), name="static")
-templates = Jinja2Templates(directory=HERE / "templates")
+def request_lang(request: Request) -> str:
+    """Cookie (chosen in the header) > saved on the account > browser language > English."""
+    lang = request.cookies.get("lang")
+    if lang not in i18n.LANGS:
+        uid = request.session.get("uid")
+        lang = ((db.get_user(uid) or {}).get("lang") if uid else None) or i18n.pick(
+            request.headers.get("accept-language", ""))
+    return lang if lang in i18n.LANGS else "en"
+
+
+def i18n_context(request: Request) -> dict:
+    return {"lang": request_lang(request), "langs": i18n.LANGS,
+            "is_admin": request.session.get("uid") in ADMIN_IDS}
+
+
+templates = Jinja2Templates(directory=HERE / "templates", context_processors=[i18n_context])
 templates.env.filters["pace"] = fmt_pace
+templates.env.globals["t"] = pass_context(lambda ctx, s: i18n.t(s, ctx.get("lang", "en")))
+templates.env.globals["ld"] = pass_context(lambda ctx, d, f: i18n.fmt_date(d, f, ctx.get("lang", "en")))
+templates.env.globals["pt"] = pass_context(lambda ctx, s: i18n.plan_text(s, ctx.get("lang", "en")))
 # Cache-buster for static links: Cloudflare caches /static for hours, file mtime changes on each deploy.
 templates.env.globals["v"] = int((HERE / "static" / "style.css").stat().st_mtime)
 db.init()
@@ -78,6 +97,8 @@ def callback(request: Request, code: str = "", state: str = "", error: str = "")
             "error": "Strava login was cancelled or failed. Try again.", "login_url": login_url(request)})
     tok = strava.exchange_code(code)
     request.session["uid"] = tok["athlete"]["id"]
+    if request.cookies.get("lang") in i18n.LANGS:
+        db.set_lang(tok["athlete"]["id"], request.cookies["lang"])
     return RedirectResponse("/")
 
 
@@ -117,12 +138,30 @@ def admin_remove(request: Request, athlete_id: int):
 
 @app.get("/support")
 def support(request: Request):
-    return templates.TemplateResponse(request, "support.html", {"user": current_user(request)})
+    page = "support_id.html" if request_lang(request) == "id" else "support.html"
+    return templates.TemplateResponse(request, page, {"user": current_user(request)})
+
+
+@app.post("/lang/{code}")
+def set_language(request: Request, background: BackgroundTasks, code: str, next: str = Form("/")):
+    if code not in i18n.LANGS:
+        raise HTTPException(404)
+    if not next.startswith("/") or next.startswith("//"):
+        next = "/"  # only redirect within this site
+    user = current_user(request)
+    if user and service.change_language(user["id"], code):
+        background.add_task(service.refresh_summary, user["id"], force=True)
+        background.add_task(service.ensure_notes, user["id"])
+    resp = RedirectResponse(next, status_code=303)
+    resp.set_cookie("lang", code, max_age=60 * 60 * 24 * 365, samesite="lax",
+                    secure=BASE_URL.startswith("https"))
+    return resp
 
 
 @app.get("/privacy")
 def privacy(request: Request):
-    return templates.TemplateResponse(request, "privacy.html", {"user": current_user(request)})
+    page = "privacy_id.html" if request_lang(request) == "id" else "privacy.html"
+    return templates.TemplateResponse(request, page, {"user": current_user(request)})
 
 
 @app.get("/logout")

@@ -94,10 +94,43 @@ def test_admin_remove_deauthorizes_and_deletes(monkeypatch):
     c.get("/auth/callback", params={"code": "x", "state": state})
 
     page = c.get("/admin").text
-    assert "<script>" not in page and "Friend &lt;script&gt;" in page  # name escaped
+    assert "Friend <script>" not in page and "Friend &lt;script&gt;" in page  # name escaped
     assert TestClient(main.app).post("/admin/remove/602").status_code == 404  # not logged in
     r = c.post("/admin/remove/602")
     assert r.status_code == 303 and revoked == [602] and db.get_user(602) is None
     c.post("/admin/remove/601")
     assert db.get_user(601) is not None  # can't remove yourself
     db.delete_user(601)
+
+
+def test_language_switch(monkeypatch):
+    from app import coach, service
+    db.init()
+    monkeypatch.setenv("GROQ_SECRET_KEY", "fake")
+    langs = []
+    monkeypatch.setattr(coach, "daily_summary", lambda m, r, p, prev, lang="en": langs.append(lang) or
+                        {"headline": "Kondisi bagus", "better": [], "watch": [], "next": ""})
+    monkeypatch.setattr(coach, "explain_days", lambda days, ctx, lang="en": {d["date"]: "x" for d in days})
+    monkeypatch.setattr(strava, "exchange_code", lambda code: (
+        db.save_user(701, "Budi Lari", "a", "r", int(time.time()) + 3600), {"athlete": {"id": 701}})[1])
+    monkeypatch.setattr(strava, "recent_runs", lambda u: [])
+    c = TestClient(main.app, follow_redirects=False)
+    assert "Your training plan" in c.get("/").text
+    assert "Program latihanmu" in c.get("/", headers={"accept-language": "id-ID,id;q=0.9"}).text
+
+    state = c.get("/auth/login").headers["location"].split("state=")[1]
+    c.get("/auth/callback", params={"code": "x", "state": state})
+    c.post("/new", data={"event_date": (date.today() + timedelta(weeks=8)).isoformat(), "distance": "10k"})
+    assert langs == ["en"]
+
+    r = c.post("/lang/id", data={"next": "/plan"})
+    assert r.status_code == 303 and r.headers["location"] == "/plan" and "lang=id" in r.headers["set-cookie"]
+    assert db.get_user(701)["lang"] == "id" and langs == ["en", "id"]  # summary rewritten in Indonesian
+    page = c.get("/plan").text
+    assert "Kondisi bagus" in page and "Kondisimu saat ini" in page
+    assert '<html lang="id">' in page and "Keluar" in page
+    c.post("/lang/id", data={"next": "/plan"})
+    assert langs == ["en", "id"]  # same language: nothing regenerated
+    assert c.post("/lang/id", data={"next": "//evil.example"}).headers["location"] == "/"
+    assert c.post("/lang/xx", data={"next": "/"}).status_code == 404
+    db.delete_user(701)

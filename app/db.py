@@ -23,7 +23,8 @@ def init() -> None:
         c.executescript("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY,          -- Strava athlete id
-            name TEXT, access_token TEXT, refresh_token TEXT, expires_at INTEGER
+            name TEXT, access_token TEXT, refresh_token TEXT, expires_at INTEGER,
+            lang TEXT DEFAULT 'en'           -- UI + coach language
         );
         CREATE TABLE IF NOT EXISTS plans (
             user_id INTEGER PRIMARY KEY REFERENCES users(id),
@@ -40,14 +41,22 @@ def init() -> None:
             date TEXT, text TEXT, n_acts INTEGER, metrics TEXT
         );
         """)
+        if "lang" not in [r[1] for r in c.execute("PRAGMA table_info(users)")]:
+            c.execute("ALTER TABLE users ADD COLUMN lang TEXT DEFAULT 'en'")  # databases from before i18n
 
 
 def save_user(uid, name, access, refresh, expires_at) -> None:
     with conn() as c:
-        c.execute("INSERT INTO users VALUES (?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET "
+        c.execute("INSERT INTO users (id, name, access_token, refresh_token, expires_at) VALUES (?,?,?,?,?) "
+                  "ON CONFLICT(id) DO UPDATE SET "
                   "name=excluded.name, access_token=excluded.access_token, "
                   "refresh_token=excluded.refresh_token, expires_at=excluded.expires_at",
                   (uid, name, access, refresh, expires_at))
+
+
+def set_lang(uid, lang: str) -> None:
+    with conn() as c:
+        c.execute("UPDATE users SET lang=? WHERE id=?", (lang, uid))
 
 
 def get_user(uid) -> dict | None:
@@ -99,6 +108,11 @@ def get_summary(uid) -> dict | None:
     text = row["text"] or ""
     parts = json.loads(text) if text.startswith("{") else {"headline": "", "better": [], "watch": [], "next": text}
     return {**dict(row), "metrics": json.loads(row["metrics"]), "parts": parts}
+
+
+def delete_summary(uid) -> None:
+    with conn() as c:
+        c.execute("DELETE FROM summaries WHERE user_id=?", (uid,))
 
 
 def save_summary(uid, day: str, text: str, n_acts: int, metrics: dict) -> None:

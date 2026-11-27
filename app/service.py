@@ -16,6 +16,10 @@ def today() -> date:
     return date.today()  # server runs with TZ=Asia/Jakarta (deploy/berlari.service)
 
 
+def user_lang(uid: int) -> str:
+    return (db.get_user(uid) or {}).get("lang") or "en"
+
+
 def threshold_pace(stats: dict) -> float:
     return stats["easy_pace_s"] - 50  # same tempo pace plan.paces() uses
 
@@ -92,6 +96,18 @@ def adapt_plan(uid: int) -> list[str]:
     return changes
 
 
+def change_language(uid: int, lang: str) -> bool:
+    """Save the language; if it changed, drop today/tomorrow's notes and the summary so they get
+    rewritten in the new language (2 LLM calls). Older notes and run reviews stay as written."""
+    if user_lang(uid) == lang:
+        return False
+    db.set_lang(uid, lang)
+    soon = {today().isoformat(), (today() + timedelta(days=1)).isoformat()}
+    db.update_days(uid, lambda by_date: [by_date[k].pop("why", None) for k in soon if k in by_date])
+    db.delete_summary(uid)
+    return True
+
+
 @coach_task
 def ensure_notes(uid: int) -> None:
     """Coach note for today and tomorrow. Normally written the evening before by the nightly job;
@@ -103,7 +119,7 @@ def ensure_notes(uid: int) -> None:
     todo = [d for d in saved["days"] if d["date"] in keys and not d.get("why")]
     if not todo:
         return
-    why = coach.explain_days(todo, context(uid, saved))
+    why = coach.explain_days(todo, context(uid, saved), user_lang(uid))
 
     def apply(by_date):
         for k, text in why.items():
@@ -126,7 +142,7 @@ def refresh_summary(uid: int, force: bool = False) -> None:
     m = fitness.metrics(acts, threshold_pace(saved["stats"]), today())
     week_ago = (today() - timedelta(days=7)).isoformat()
     recent = [a["data"] | {"date": a["date"]} for a in acts if a["date"] >= week_ago]
-    parts = coach.daily_summary(m, recent, target(saved), prev["text"] if prev else None)
+    parts = coach.daily_summary(m, recent, target(saved), prev["text"] if prev else None, user_lang(uid))
     db.save_summary(uid, today().isoformat(), json.dumps(parts), len(acts), m)
 
 
@@ -154,7 +170,7 @@ def review_day(uid: int, day_key: str) -> None:
     if not d or d.get("review") or not d["runs"]:
         return
     actual = {"runs": d["runs"], "total_km": round(sum(r["km"] for r in d["runs"]), 2)}
-    text = coach.review_session(d, actual, context(uid, saved))
+    text = coach.review_session(d, actual, context(uid, saved), user_lang(uid))
     db.update_days(uid, lambda by_date: by_date[day_key].__setitem__("review", text))
 
 
