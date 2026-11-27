@@ -33,7 +33,8 @@ def init() -> None:
         CREATE TABLE IF NOT EXISTS activities (
             id INTEGER PRIMARY KEY,          -- Strava activity id
             user_id INTEGER, date TEXT,      -- local date of the run
-            km REAL, moving_s INTEGER, avg_hr REAL, data TEXT
+            km REAL, moving_s INTEGER, avg_hr REAL, data TEXT,
+            stream TEXT                      -- 5-second speed/HR samples for runs (variation checks)
         );
         CREATE INDEX IF NOT EXISTS activities_user_date ON activities(user_id, date);
         CREATE TABLE IF NOT EXISTS summaries (
@@ -41,6 +42,8 @@ def init() -> None:
             date TEXT, text TEXT, n_acts INTEGER, metrics TEXT
         );
         """)
+        if "stream" not in [r[1] for r in c.execute("PRAGMA table_info(activities)")]:
+            c.execute("ALTER TABLE activities ADD COLUMN stream TEXT")
         if "lang" not in [r[1] for r in c.execute("PRAGMA table_info(users)")]:
             c.execute("ALTER TABLE users ADD COLUMN lang TEXT DEFAULT 'en'")  # databases from before i18n
 
@@ -79,10 +82,18 @@ def get_plan(uid) -> dict | None:
     return {k: json.loads(row[k]) for k in ("params", "stats", "days")}
 
 
-def save_activity(uid, aid, day: str, run: dict) -> None:
+def save_activity(uid, aid, day: str, run: dict, stream: dict | None = None) -> None:
     with conn() as c:
-        c.execute("INSERT OR REPLACE INTO activities VALUES (?,?,?,?,?,?,?)",
-                  (aid, uid, day, run["km"], round(run["moving_min"] * 60), run.get("avg_hr"), json.dumps(run)))
+        c.execute("INSERT OR REPLACE INTO activities (id, user_id, date, km, moving_s, avg_hr, data, stream) "
+                  "VALUES (?,?,?,?,?,?,?,?)", (aid, uid, day, run["km"], round(run["moving_min"] * 60),
+                                               run.get("avg_hr"), json.dumps(run), json.dumps(stream) if stream else None))
+
+
+def get_streams(uid, since: str) -> dict[int, dict]:
+    with conn() as c:
+        rows = c.execute("SELECT id, stream FROM activities WHERE user_id=? AND date>=? AND stream IS NOT NULL",
+                         (uid, since)).fetchall()
+    return {r["id"]: json.loads(r["stream"]) for r in rows}
 
 
 def delete_activity(uid, aid) -> str | None:
@@ -95,7 +106,8 @@ def delete_activity(uid, aid) -> str | None:
 
 def get_activities(uid, since: str = "") -> list[dict]:
     with conn() as c:
-        rows = c.execute("SELECT * FROM activities WHERE user_id=? AND date>=? ORDER BY date, id",
+        rows = c.execute("SELECT id, user_id, date, km, moving_s, avg_hr, data FROM activities "
+                         "WHERE user_id=? AND date>=? ORDER BY date, id",
                          (uid, since)).fetchall()
     return [{**dict(r), "data": json.loads(r["data"])} for r in rows]
 

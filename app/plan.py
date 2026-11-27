@@ -123,19 +123,23 @@ def build_plan(stats: Stats, distance: str, event: date, runs_per_week: int,
                 break
             sess: list[dict] = []
             if dow == long_dow:
+                long_var = {"base": "classic", "build": ["classic", "progression", "surges"][w % 3],
+                            "peak": ["fast_finish", "race_pace", "classic"][w % 3], "taper": "classic"}[phase]
                 sess.append({"type": "LRW", "km": long_km, "run_min": 4, "walk_min": 1, "warmup": wu} if run_walk else
-                            {"type": "LONG", "km": long_km, "pace": p["easy"], "warmup": wu})
+                            {"type": "LONG", "km": long_km, "pace": p["easy"], "warmup": wu, "var": long_var})
             elif dow == run_days[0]:
-                sess.append({"type": quality, "km": quality_km, "warmup": wu,
+                qvar = {"N4X4": "n4x4", "INT": ["track", "hiit", "pyramid", "fartlek", "sprints"][(w // 3) % 5],
+                        "TEMPO": ["steady", "cruise", "progressive"][(w // 3) % 3]}[quality]
+                sess.append({"type": quality, "km": quality_km, "warmup": wu, "var": qvar,
                              **({"minutes": 40} if quality == "N4X4" else
                                 {"reps": 6, "pace": p["interval"]} if quality == "INT" else
                                 {"tempo_km": max(round(quality_km) - 3, 2), "pace": p["tempo"]})})
             elif dow in run_days:
                 sess.append({"type": "RW", "km": easy_km, "minutes": rnd5(easy_km * p["easy"] / 60),
                              "run_min": 2, "walk_min": 1, "warmup": wu} if run_walk else
-                            {"type": "EASY", "km": easy_km, "pace": p["easy"], "warmup": wu})
-                if phase in ("build", "peak") and dow == easy_dows[-1]:
-                    sess.append({"type": "STRIDES", "reps": 4 if phase == "build" else 6})
+                            {"type": "EASY", "km": easy_km, "pace": p["easy"], "warmup": wu,
+                             "var": ("strides" if phase in ("build", "peak") and dow == easy_dows[-1] else
+                                     "progression" if phase == "build" and w % 2 else "aerobic")})
             if dow in strength_dows and (event - d).days > 4:
                 sess.append({"type": "SBW", "rounds": rounds})
             days.append(make_day(d.isoformat(), sess or [{"type": "REST"}]))

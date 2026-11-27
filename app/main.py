@@ -50,6 +50,8 @@ templates.env.globals["pt"] = pass_context(lambda ctx, s: i18n.plan_text(s, ctx.
 templates.env.globals["slabel"] = pass_context(lambda ctx, s: sessions.label(s, ctx.get("lang", "en")))
 templates.env.globals["stext"] = pass_context(lambda ctx, s: sessions.describe(s, ctx.get("lang", "en")))
 templates.env.globals["swarm"] = pass_context(lambda ctx, s: sessions.warmup(s, ctx.get("lang", "en")))
+templates.env.globals["svars"] = sessions.variations
+templates.env.globals["svar"] = sessions.variation
 # Cache-buster for static links: Cloudflare caches /static for hours, file mtime changes on each deploy.
 templates.env.globals["v"] = int((HERE / "static" / "style.css").stat().st_mtime)
 db.init()
@@ -240,6 +242,17 @@ def show_plan(request: Request, background: BackgroundTasks):
         "summary": db.get_summary(user["id"]), "m": service.current_metrics(user["id"], saved),
         "chart": service.chart(user["id"], saved), "recent": service.recent_runs(user["id"]),
         "date": date, "days_left": (date.fromisoformat(saved["params"]["event_date"]) - t).days})
+
+
+@app.post("/plan/variation")
+def choose_variation(request: Request, background: BackgroundTasks, day: str = Form(...), idx: int = Form(...),
+                     var: str = Form(...)):
+    user = current_user(request)
+    if not user:
+        return RedirectResponse("/", status_code=303)
+    if service.set_variation(user["id"], day, idx, var):
+        background.add_task(service.ensure_notes, user["id"])
+    return RedirectResponse(f"/plan#d-{day}", status_code=303)
 
 
 # --- Strava webhook: https://developers.strava.com/docs/webhooks/ ---

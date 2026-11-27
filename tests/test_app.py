@@ -134,3 +134,32 @@ def test_language_switch(monkeypatch):
     assert c.post("/lang/id", data={"next": "//evil.example"}).headers["location"] == "/"
     assert c.post("/lang/xx", data={"next": "/"}).status_code == 404
     db.delete_user(701)
+
+
+def test_bucket_stream_into_5_second_samples():
+    data = {"time": {"data": [0, 1, 2, 5, 6, 30, 31]}, "velocity_smooth": {"data": [3, 3, 3, 4, 4, 2, 2]},
+            "heartrate": {"data": [100, 110, 120, 130, 140, 150, 160]}}
+    out = strava.bucket(data)
+    assert out["v"] == [3.0, 4.0, 2.0] and out["hr"] == [110, 135, 155]  # paused gap 7-29 s dropped
+    assert strava.bucket({"time": {"data": [0]}}) is None  # no speed (treadmill without GPS)
+
+
+def test_choose_variation_only_for_upcoming_sessions(monkeypatch):
+    from app import service
+    db.init()
+    monkeypatch.setattr(strava, "exchange_code", lambda code: (
+        db.save_user(801, "Var Runner", "a", "r", int(time.time()) + 3600), {"athlete": {"id": 801}})[1])
+    monkeypatch.setattr(strava, "recent_runs", lambda u: [])
+    c = TestClient(main.app, follow_redirects=False)
+    state = c.get("/auth/login").headers["location"].split("state=")[1]
+    c.get("/auth/callback", params={"code": "x", "state": state})
+    c.post("/new", data={"event_date": (date.today() + timedelta(weeks=12)).isoformat(), "distance": "10k"})
+    days = db.get_plan(801)["days"]
+    d = next(x for x in days if x["date"] > date.today().isoformat() and any(s["type"] == "LONG" for s in x["sessions"]))
+    idx = next(i for i, s in enumerate(d["sessions"]) if s["type"] == "LONG")  # beginners start with LRW weeks
+    assert "Choose another variation" in c.get("/plan").text
+    c.post("/plan/variation", data={"day": d["date"], "idx": idx, "var": "hilly"})
+    assert next(x for x in db.get_plan(801)["days"] if x["date"] == d["date"])["sessions"][idx]["var"] == "hilly"
+    assert not service.set_variation(801, d["date"], idx, "sprints")  # not a long-run variation
+    assert not service.set_variation(801, "2000-01-01", 0, "classic")  # past/unknown day
+    db.delete_user(801)

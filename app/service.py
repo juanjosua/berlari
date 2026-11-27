@@ -7,7 +7,7 @@ from functools import wraps
 
 from . import coach, db, fitness, strava
 from . import sessions as S
-from .plan import adapt
+from .plan import Stats, adapt, paces
 
 log = logging.getLogger("berlari")
 _busy: set[tuple[str, int]] = set()  # (task, user) running now: page refreshes don't stack LLM calls
@@ -55,18 +55,41 @@ def max_hr(uid: int) -> float:
 def days_with_runs(uid: int, saved: dict) -> list[dict]:
     """Plan days with that day's Strava activities, a check per planned session and a day status."""
     first = saved["days"][0]["date"] if saved["days"] else ""
+    streams = db.get_streams(uid, first)
     runs: dict[str, list[dict]] = {}
     for a in db.get_activities(uid, first):
-        runs.setdefault(a["date"], []).append(a["data"] | {"id": a["id"]})
-    t, mhr = today().isoformat(), max_hr(uid)
+        runs.setdefault(a["date"], []).append(a["data"] | {"id": a["id"], "stream": streams.get(a["id"])})
+    t, mhr, pc = today().isoformat(), max_hr(uid), plan_paces(saved)
     out = []
     for d in saved["days"]:
         acts, past = runs.get(d["date"], []), d["date"] < t
         sess = d.get("sessions") or S.from_legacy(d)
-        checks = [S.check(s, acts, past, mhr) for s in sess]
+        checks = [S.check(s, acts, past, mhr, pc) for s in sess]
         out.append(d | {"runs": acts, "sessions": sess, "checks": checks,
                         "status": S.day_state(checks, acts, sess, past)})
     return out
+
+
+def plan_paces(saved: dict) -> dict:
+    """Easy/tempo/interval/race paces (s/km) the plan uses, for pace-based variation checks."""
+    g = (saved["params"].get("goal_time") or "").split(":")
+    goal_s = int(g[0]) * 3600 + int(g[1]) * 60 if len(g) == 2 and all(x.isdigit() for x in g) else None
+    return paces(Stats(**saved["stats"]), saved["params"]["distance"], goal_s)
+
+
+def set_variation(uid: int, day: str, idx: int, var: str) -> bool:
+    """Athlete picked another variation for an upcoming session. Its coach note is rewritten."""
+    ok = []
+
+    def apply(by_date):
+        d = by_date.get(day)
+        sess = (d or {}).get("sessions") or []
+        if d and day >= today().isoformat() and 0 <= idx < len(sess) and var in [v[0] for v in S.variations(sess[idx])]:
+            sess[idx]["var"] = var
+            d.pop("why", None)
+            ok.append(True)
+    db.update_days(uid, apply)
+    return bool(ok)
 
 
 def current_metrics(uid: int, saved: dict) -> dict:
@@ -215,13 +238,12 @@ def _handle_event(ev: dict) -> None:
         _drop_review_if_no_runs(uid, db.delete_activity(uid, aid))  # e.g. changed to a ride
         return
     day_key = a["start_date_local"][:10]
-    run = strava.run_summary(a)
-    saved = db.get_plan(uid)
-    planned = next((d.get("sessions") or [] for d in (saved or {}).get("days", []) if d["date"] == day_key), [])
-    if any(s["type"] == "N4X4" for s in planned) and kind in S.RUN_TYPES and a.get("average_heartrate"):
-        stream = strava.hr_stream(user, aid)
-        if stream:
-            run["hard_blocks"] = S.hard_blocks(*stream, threshold=0.85 * max_hr(uid))
-    db.save_activity(uid, aid, day_key, run)
+    stream = None
+    if kind in S.RUN_TYPES:
+        try:
+            stream = strava.run_stream(user, aid)
+        except Exception:  # keep the run even if the detailed stream isn't available
+            log.exception("stream fetch failed for activity %s", aid)
+    db.save_activity(uid, aid, day_key, strava.run_summary(a), stream)
     if kind not in S.STRENGTH_TYPES:
         review_day(uid, day_key)

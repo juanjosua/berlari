@@ -65,7 +65,7 @@
     <span class="muted">{% set wk = week | sum(attribute="km") %}{% if wk %}{{ "%.0f" | format(wk) }} km{% endif %}{% if wk and ns.m %} + {% endif %}{% if ns.m %}{{ ns.m }} {{ t("min") }}{% endif %}</span></h2>
   <ol>
     {% for d in week %}
-    <li class="day {{ d.kind }} {{ d.status or "" }} {% if d.date == today %}today{% endif %}" {% if d.date == today %}id="today"{% endif %}>
+    <li class="day {{ d.kind }} {{ d.status or "" }} {% if d.date == today %}today{% endif %}" id="d-{{ d.date }}">
       <div class="when">{{ ld(d.date, "%a %d") }}</div>
       <div class="what">
         {% if d.status %}<em class="badge {{ d.status }} day-badge">{{ t({"done": "Done", "partial": "Partly done", "extra": "Extra run", "missed": "Missed"}[d.status]) }}</em>{% endif %}
@@ -73,6 +73,24 @@
         <div class="sess t-{{ s.type | lower }}">
           <strong>{{ slabel(s) }}{% if s.km and s.type not in ("N4X4", "RW") %} · {{ "%g" | format(s.km) }} km{% elif s.minutes %} · {{ s.minutes }} {{ t("min") }}{% endif %}</strong>
           {% if s.type != "REST" or s.note %}<span>{{ stext(s) }}</span>{% endif %}
+          {% set cur = svar(s) %}{% set li = 1 if lang == "id" else 0 %}
+          {% if cur %}
+          <div class="var"><span class="var-name">{{ t("Variation") }}: <b>{{ cur[1][li] }}</b></span>
+            <span>{{ cur[2][li] }}</span>
+            {% if d.date >= today %}
+            <details class="var-pick"><summary>{{ t("Choose another variation") }}</summary>
+              <form method="post" action="/plan/variation">
+                <input type="hidden" name="day" value="{{ d.date }}"><input type="hidden" name="idx" value="{{ loop.index0 }}">
+                {% for v in svars(s) %}
+                <label class="vopt"><input type="radio" name="var" value="{{ v[0] }}" {% if v[0] == cur[0] %}checked{% endif %}
+                  onchange="this.form.submit()"><span><b>{{ v[1][li] }}</b><br>{{ v[2][li] }}</span></label>
+                {% endfor %}
+                <noscript><button class="btn" type="submit">{{ t("Save") }}</button></noscript>
+              </form>
+            </details>
+            {% endif %}
+          </div>
+          {% endif %}
           {% if s.warmup is not none %}<span class="warm">{{ swarm(s) }}</span>{% endif %}
           {% if c.state %}<span class="check {{ c.state }}">{{ c[lang] }}</span>{% endif %}
         </div>

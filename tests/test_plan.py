@@ -27,7 +27,8 @@ def test_beginner_gets_run_walk_and_norwegian_4x4_then_progresses():
     types = lambda ds: {x["type"] for d in ds for x in d.sessions}  # noqa: E731
     assert {"RW", "LRW", "N4X4", "SBW"} <= types(days[:14])
     assert "INT" not in types(days)
-    assert {"EASY", "LONG", "STRIDES"} <= types(days[-60:])
+    assert {"EASY", "LONG"} <= types(days[-60:])
+    assert "strides" in {x.get("var") for d in days[-60:] for x in d.sessions}
     assert days[-1].kind == "race" and not any(x["type"] == "SBW" for d in days[-4:] for x in d.sessions)
 
 

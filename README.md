@@ -87,6 +87,12 @@ cap, km splits at tempo pace, hard efforts for intervals, and four 3-minute high
 (from the heart-rate stream). Strength counts when logged on Strava as Weight Training; strides and warm-ups
 can't be checked.
 
+Variations: interval, tempo, easy and long-run days each offer a menu the athlete can pick from on the plan
+page (e.g. classic reps, HIIT 30/30, sprints, pyramid, fartlek, Norwegian 4x4; steady tempo, cruise intervals,
+progressive; recovery, strides, progression, trail; fast-finish, race-pace blocks, surges, hilly). Only variations
+whose structure is visible in Strava data are offered: each run's speed and heart rate are kept as 5-second samples,
+and the check looks for the expected fast efforts, tempo blocks, pace build-up or heart-rate caps.
+
 Custom plans: write a JSON file (see `examples/bfi-run-2027-half-marathon.json`, built by
 `examples/build_bfi_2027.py`) and load it with `python -m app.import_plan <athlete_id> <file.json>`.
 Custom plans are followed as written (no automatic adjustments).

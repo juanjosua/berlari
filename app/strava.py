@@ -95,18 +95,35 @@ def run_summary(a: dict) -> dict:
     return out
 
 
-def hr_stream(user: dict, activity_id: int) -> tuple[list, list] | None:
-    """Heart rate and time samples for one activity, or None without HR data."""
+def run_stream(user: dict, activity_id: int) -> dict | None:
+    """Speed (m/s) and heart rate averaged into 5-second buckets: small enough to keep, detailed
+    enough to see intervals, surges and tempo blocks. None if the activity has no GPS/speed data."""
     r = httpx.get(f"{API}/activities/{activity_id}/streams", timeout=20,
                   headers={"Authorization": f"Bearer {access_token(user)}"},
-                  params={"keys": "heartrate,time", "key_by_type": "true"})
+                  params={"keys": "time,velocity_smooth,heartrate", "key_by_type": "true"})
     if r.status_code == 404:
         return None
     r.raise_for_status()
-    data = r.json()
-    if "heartrate" not in data:
+    return bucket(r.json())
+
+
+def bucket(data: dict, step: int = 5) -> dict | None:
+    if "velocity_smooth" not in data or "time" not in data:
         return None
-    return data["heartrate"]["data"], data["time"]["data"]
+    t, v = data["time"]["data"], data["velocity_smooth"]["data"]
+    hr = data.get("heartrate", {}).get("data")
+    n = int(t[-1] // step) + 1 if t else 0
+    sums, cnt, hsum = [0.0] * n, [0] * n, [0.0] * n
+    for i, ti in enumerate(t):
+        k = int(ti // step)
+        sums[k] += v[i]
+        cnt[k] += 1
+        if hr:
+            hsum[k] += hr[i]
+    # empty buckets (auto-pause) are dropped so time = moving time
+    keep = [k for k in range(n) if cnt[k]]
+    return {"v": [round(sums[k] / cnt[k], 2) for k in keep],
+            "hr": [round(hsum[k] / cnt[k]) for k in keep] if hr else None}
 
 
 def deauthorize(user: dict) -> None:

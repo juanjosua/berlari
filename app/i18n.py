@@ -47,6 +47,7 @@ ID = {
     "You're following a custom plan. Building a new plan here replaces it.":
         "Kamu sedang mengikuti program kustom. Membuat program baru di sini akan menggantinya.",
     "Run": "Lari", "Walk": "Jalan", "Strength": "Strength",
+    "Variation": "Variasi", "Choose another variation": "Pilih variasi lain", "Save": "Simpan",
     "Week of": "Minggu", "Adjusted": "Disesuaikan", "Ran": "Lari", "in": "dalam", "min": "mnt",
     "Easy": "Santai", "Long": "Lari jauh", "Intervals": "Interval", "Tempo": "Tempo", "Rest": "Istirahat",
     "Race": "Lomba",

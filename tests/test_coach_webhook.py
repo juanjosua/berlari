@@ -66,6 +66,7 @@ def test_coach_rules_and_webhook(monkeypatch):
     # A run today: attached, statused, reviewed once (edits don't re-review)
     act = run(99, DAY0, km=9.0)
     monkeypatch.setattr(strava, "get_activity", lambda u, aid: act)
+    monkeypatch.setattr(strava, "run_stream", lambda u, aid: None)
     ev = {"object_type": "activity", "object_id": 99, "aspect_type": "create", "owner_id": 7}
     c.post("/strava/webhook", json=ev)
     page = c.get("/plan").text
