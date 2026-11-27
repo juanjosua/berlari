@@ -1,0 +1,10 @@
+<details class="var-pick"><summary>{{ t("Choose another variation") }}</summary>
+  <form method="post" action="/plan/variation">
+    <input type="hidden" name="day" value="{{ d.date }}"><input type="hidden" name="idx" value="{{ loop.index0 }}">
+    {% for v in vlist %}
+    <label class="vopt"><input type="radio" name="var" value="{{ v.id }}" {% if v.id == cur.id %}checked{% endif %}
+      onchange="this.form.submit()"><span><b>{{ v.label[li] }}</b><br>{{ v.what[li] }}</span></label>
+    {% endfor %}
+    <noscript><button class="btn" type="submit">{{ t("Save") }}</button></noscript>
+  </form>
+</details>

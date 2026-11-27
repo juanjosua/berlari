@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block content %}
+{% set li = 1 if lang == "id" else 0 %}
+<h1>{{ t("Settings") }}</h1>
+{% if saved_ok %}<p class="notice" role="status">{{ t("Saved. Upcoming sessions now use your defaults.") }}</p>{% endif %}
+<form method="post" action="/settings" class="card">
+  <label>{{ t("Your age") }} <span class="muted">{{ t("(Strava doesn't share it)") }}</span>
+    <input type="number" name="age" inputmode="numeric" min="10" max="100" value="{{ prefs.age or '' }}">
+  </label>
+  <p class="small muted">{% if hr_src == "tanaka" %}{{ t("Max heart rate") }}: <b>{{ hrmax }} bpm</b> (Tanaka: 208 − 0.7 × {{ prefs.age }}).
+    {% elif hrmax %}{{ t("Max heart rate") }}: <b>{{ hrmax }} bpm</b> ({{ t("highest seen in your runs; add your age in Settings to use the Tanaka formula.") }})
+    {% else %}{{ t("Add your age in Settings to see heart-rate ranges in bpm.") }}{% endif %}</p>
+
+  <h2>{{ t("Default variations") }}</h2>
+  <p class="small muted">{{ t("Used for every upcoming session of that type, unless you pick something else on the day.") }}</p>
+  {% for fam, name in families %}
+  <label>{{ t(name) }}
+    <select name="var_{{ fam }}">
+      <option value="">{{ t("Recommended by the plan (changes by phase)") }}</option>
+      {% for v in opts[fam] %}<option value="{{ v.id }}" {% if (prefs.var or {}).get(fam) == v.id %}selected{% endif %}>{{ v.label[li] }}</option>{% endfor %}
+    </select>
+  </label>
+  {% endfor %}
+  <button class="btn" type="submit">{{ t("Save") }}</button>
+</form>
+{% endblock %}

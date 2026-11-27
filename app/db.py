@@ -24,7 +24,8 @@ def init() -> None:
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY,          -- Strava athlete id
             name TEXT, access_token TEXT, refresh_token TEXT, expires_at INTEGER,
-            lang TEXT DEFAULT 'en'           -- UI + coach language
+            lang TEXT DEFAULT 'en',          -- UI + coach language
+            prefs TEXT                       -- JSON: {"age": 31, "var": {"INT": "n4x4", ...}}
         );
         CREATE TABLE IF NOT EXISTS plans (
             user_id INTEGER PRIMARY KEY REFERENCES users(id),
@@ -44,8 +45,11 @@ def init() -> None:
         """)
         if "stream" not in [r[1] for r in c.execute("PRAGMA table_info(activities)")]:
             c.execute("ALTER TABLE activities ADD COLUMN stream TEXT")
-        if "lang" not in [r[1] for r in c.execute("PRAGMA table_info(users)")]:
+        cols = [r[1] for r in c.execute("PRAGMA table_info(users)")]
+        if "lang" not in cols:
             c.execute("ALTER TABLE users ADD COLUMN lang TEXT DEFAULT 'en'")  # databases from before i18n
+        if "prefs" not in cols:
+            c.execute("ALTER TABLE users ADD COLUMN prefs TEXT")
 
 
 def save_user(uid, name, access, refresh, expires_at) -> None:
@@ -55,6 +59,11 @@ def save_user(uid, name, access, refresh, expires_at) -> None:
                   "name=excluded.name, access_token=excluded.access_token, "
                   "refresh_token=excluded.refresh_token, expires_at=excluded.expires_at",
                   (uid, name, access, refresh, expires_at))
+
+
+def set_prefs(uid, prefs: dict) -> None:
+    with conn() as c:
+        c.execute("UPDATE users SET prefs=? WHERE id=?", (json.dumps(prefs), uid))
 
 
 def set_lang(uid, lang: str) -> None:

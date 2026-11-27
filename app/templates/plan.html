@@ -10,6 +10,30 @@
     {{ t("typical pace") }} {{ s.easy_pace_s | pace }}</p>
 </section>
 
+{% if phases %}
+<section class="card phase-card">
+  {% set li = 1 if lang == "id" else 0 %}
+  {% if phase_now %}
+  <span class="eyebrow">{{ t("Phase") }} {{ phase_now.n }}/{{ phases | length }} · {{ phase_now.label }}</span>
+  <p class="headline">{{ phase_now.goal }}</p>
+  <p class="small muted">{{ ld(phase_now.start, "%d %b") }} – {{ ld(phase_now.end, "%d %b") }}</p>
+  {% if phase_now.checkpoint_text %}<p class="small"><b>⚑</b> {{ phase_now.checkpoint_text }}</p>{% endif %}
+  {% if phase_now.progress is not none %}
+  <div class="bar"><span style="width: {{ (phase_now.progress * 100) | round | int }}%"></span></div>
+  <p class="small muted">{{ t("Sessions done so far in this phase") }}: {{ (phase_now.progress * 100) | round | int }}% ({{ t("goal") }} 75%)</p>
+  {% endif %}
+  {% endif %}
+  {% for r in phase_results %}<p class="result {{ 'passed' if r.passed else 'failed' }}">{{ pmsg(r) }}</p>{% endfor %}
+  <details class="how"><summary>{{ t("All phases") }}</summary>
+    <ol class="phases">{% for x in phases %}
+      <li><b>{{ x.label }}</b> · {{ ld(x.start, "%d %b") }} – {{ ld(x.end, "%d %b") }}<br><span class="small">{{ x.goal }}</span>
+        {% if x.checkpoint_text %}<br><span class="small muted">⚑ {{ x.checkpoint_text }}</span>{% endif %}</li>
+    {% endfor %}</ol>
+  </details>
+  <p class="small muted">{{ hr_note }}</p>
+</section>
+{% endif %}
+
 {% macro act(r) %}{{ t({"Run": "Run", "TrailRun": "Run", "VirtualRun": "Run", "Walk": "Walk", "Hike": "Walk"}.get(r.type or "Run", "Strength")) }}
   {% if r.km %}{{ "%g" | format(r.km) }} km · {% endif %}{{ "%g" | format(r.moving_min) }} {{ t("min") }}{% if r.km and r.pace %} · {{ r.pace }}{% endif %}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}{% endmacro %}
 {% macro delta(now, before, color=True) %}{% set d = now - before %}{% if d|abs >= 0.1 %}<small class="{{ ('up' if d > 0 else 'down') if color else '' }}">{{ "%+.1f" | format(d) }}</small>{% endif %}{% endmacro %}
@@ -58,7 +82,11 @@
 {% endif %}
 {% if coach_on %}<p class="muted small">{{ t("Coach notes for each day appear the evening before. The summary updates each evening after days you trained.") }}</p>{% endif %}
 
+{% set ph = namespace(cur=None) %}
 {% for week in weeks %}
+{% if week[0].phase and week[0].phase != ph.cur %}{% set ph.cur = week[0].phase %}
+<h2 class="phase-h">{{ t("Phase") }}: {{ phase_label(ph.cur) }}</h2>
+{% endif %}
 <section class="week">
   <h2>{{ t("Week of") }} {{ ld(week[0].date, "%d %b") }}
     {% set ns = namespace(m=0) %}{% for d in week %}{% for s in d.sessions %}{% if not s.km %}{% set ns.m = ns.m + (s.minutes or 0) %}{% endif %}{% endfor %}{% endfor %}
@@ -68,27 +96,32 @@
     <li class="day {{ d.kind }} {{ d.status or "" }} {% if d.date == today %}today{% endif %}" id="d-{{ d.date }}">
       <div class="when">{{ ld(d.date, "%a %d") }}</div>
       <div class="what">
+        {% if d.date in checkpoints %}<em class="badge checkpoint day-badge">⚑ {{ t("Checkpoint") }}</em>{% endif %}
         {% if d.status %}<em class="badge {{ d.status }} day-badge">{{ t({"done": "Done", "partial": "Partly done", "extra": "Extra run", "missed": "Missed"}[d.status]) }}</em>{% endif %}
         {% for s in d.sessions %}{% set c = d.checks[loop.index0] %}
         <div class="sess t-{{ s.type | lower }}">
           <strong>{{ slabel(s) }}{% if s.km and s.type not in ("N4X4", "RW") %} · {{ "%g" | format(s.km) }} km{% elif s.minutes %} · {{ s.minutes }} {{ t("min") }}{% endif %}</strong>
           {% if s.type != "REST" or s.note %}<span>{{ stext(s) }}</span>{% endif %}
           {% set cur = svar(s) %}{% set li = 1 if lang == "id" else 0 %}
-          {% if cur %}
-          <div class="var"><span class="var-name">{{ t("Variation") }}: <b>{{ cur[1][li] }}</b></span>
-            <span>{{ cur[2][li] }}</span>
-            {% if d.date >= today %}
-            <details class="var-pick"><summary>{{ t("Choose another variation") }}</summary>
-              <form method="post" action="/plan/variation">
-                <input type="hidden" name="day" value="{{ d.date }}"><input type="hidden" name="idx" value="{{ loop.index0 }}">
-                {% for v in svars(s) %}
-                <label class="vopt"><input type="radio" name="var" value="{{ v[0] }}" {% if v[0] == cur[0] %}checked{% endif %}
-                  onchange="this.form.submit()"><span><b>{{ v[1][li] }}</b><br>{{ v[2][li] }}</span></label>
-                {% endfor %}
-                <noscript><button class="btn" type="submit">{{ t("Save") }}</button></noscript>
-              </form>
+          {% if cur and s.type == "SBW" %}
+          <div class="var">
+            <span class="var-name">{{ t("Routine") }}: <b>{{ cur.label[li] }}</b></span>
+            <span>{{ cur.what[li] }}</span>
+            <ul class="moves">{% for mid in cur.moves %}{% set e = exercise(mid) %}
+              <li><details><summary><b>{{ e[0][li] }}</b> · {{ e[1][li] }}</summary><span>{{ e[2][li] }}</span></details></li>
+            {% endfor %}</ul>
+            <span class="small">{{ rest_note[li] }}</span>
+            {% if d.date >= today %}{% set vlist = svars(s) %}{% include "_varpick.html" %}{% endif %}
+          </div>
+          {% elif cur %}
+          <div class="var">
+            <span class="var-name">{{ t("Variation") }}: <b>{{ cur.label[li] }}</b></span>
+            <span>{{ cur.what[li] }}</span>
+            {% if cur.zone %}<span class="hr">♥ {{ t("Heart rate") }}: {{ vzone(cur.zone) }}</span>{% endif %}
+            <details class="how"><summary>{{ t("How to do it") }}</summary>
+              <ol>{% for st in cur.how %}<li>{{ vfill(st) }}</li>{% endfor %}</ol>
             </details>
-            {% endif %}
+            {% if d.date >= today %}{% set vlist = svars(s) %}{% include "_varpick.html" %}{% endif %}
           </div>
           {% endif %}
           {% if s.warmup is not none %}<span class="warm">{{ swarm(s) }}</span>{% endif %}
@@ -102,6 +135,7 @@
           {% if r.id %}· <a class="strava-link" href="https://www.strava.com/activities/{{ r.id }}" target="_blank" rel="noopener">View on Strava</a>{% endif %}</span>
         {% endfor %}
         {% if d.review %}<p class="review">{{ d.review }}</p>{% endif %}
+        {% if d.checkpoint_result %}<p class="result {{ 'passed' if d.checkpoint_result.passed else 'failed' }}">{{ pmsg(d.checkpoint_result) }}</p>{% endif %}
       </div>
     </li>
     {% endfor %}

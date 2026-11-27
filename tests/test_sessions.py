@@ -56,7 +56,7 @@ def test_interval_variations_count_fast_efforts():
     assert var_state("INT", "pyramid", srun(pyramid))["state"] == "done"
     fartlek = sum((b(240, EASY) + b(90, FAST) for _ in range(8)), [])
     c = var_state("INT", "fartlek", srun(fartlek))
-    assert c["state"] == "done" and "Fartlek ✓" in c["en"]
+    assert c["state"] == "done" and "Fartlek" in c["en"] and "✓" in c["en"]
     assert var_state("INT", "fartlek", srun(b(2400, EASY)))["state"] == "partial"
 
 
@@ -158,5 +158,29 @@ def test_generic_workout_is_not_counted_as_strength():
 
 def test_title_follows_swapped_interval_variation():
     from app.sessions import label
-    assert label({"type": "N4X4"}) == "Norwegian 4x4"
+    assert label({"type": "N4X4"}) == "Intervals"  # legacy types show as the app category
     assert label({"type": "N4X4", "var": "hiit"}) == "Intervals" and label({"type": "N4X4", "var": "hiit"}, "id") == "Interval"
+
+
+def test_run_walk_and_walk_breaks_detected_from_speed():
+    rw = sum((b(150, 2.6) + b(60, 1.4) for _ in range(8)), [])  # 2.5 min jog / 1 min walk
+    assert check({"type": "EASY", "var": "runwalk", "minutes": 25}, [srun(rw)], True, 190)["state"] == "done"
+    c = check({"type": "EASY", "var": "runwalk", "minutes": 25}, [srun(b(1700, 2.6))], True, 190)
+    assert c["state"] == "partial" and "walk breaks" in c["en"]
+    walk = {"type": "Walk", "km": 3, "moving_min": 30, "avg_hr": 110}
+    assert check({"type": "EASY", "var": "runwalk", "minutes": 30}, [walk], True, 190)["state"] == "done"
+    assert check({"type": "EASY", "var": "walk", "minutes": 30}, [walk], True, 190)["state"] == "done"
+    assert check({"type": "EASY", "var": "walk", "minutes": 30}, [walk | {"avg_hr": 150}], True, 190)["state"] == "partial"
+    lr = sum((b(600, 2.6) + b(45, 1.3) for _ in range(6)), [])
+    assert check({"type": "LONG", "var": "walk_breaks", "km": 8}, [srun(lr, km=8)], True, 190)["state"] == "done"
+
+
+def test_every_variation_explains_itself_in_both_languages():
+    from app.variations import EXERCISES, STRENGTH, V, fill
+    for fam, vs in V.items():
+        for v in vs:
+            assert v["what"][0] and v["what"][1] and len(v["how"]) >= 2
+            for step in v["how"]:
+                assert "{" not in fill(step[1], 185, {"easy": 420, "tempo": 360, "interval": 330, "race": 480}, "id")
+    for r in STRENGTH:
+        assert all(m in EXERCISES and EXERCISES[m][2][1] for m in r["moves"])

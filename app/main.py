@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates  # noqa: E402
 from jinja2 import pass_context  # noqa: E402
 from starlette.middleware.sessions import SessionMiddleware  # noqa: E402
 
-from . import coach, db, i18n, service, sessions, strava  # noqa: E402
+from . import coach, db, i18n, plan as P, service, sessions, strava, variations  # noqa: E402
 from .plan import DISTANCES_KM, build_plan, fmt_pace, plan_to_dicts  # noqa: E402
 
 HERE = Path(__file__).parent
@@ -51,6 +51,13 @@ templates.env.globals["slabel"] = pass_context(lambda ctx, s: sessions.label(s, 
 templates.env.globals["stext"] = pass_context(lambda ctx, s: sessions.describe(s, ctx.get("lang", "en")))
 templates.env.globals["swarm"] = pass_context(lambda ctx, s: sessions.warmup(s, ctx.get("lang", "en")))
 templates.env.globals["svars"] = sessions.variations
+templates.env.globals["exercise"] = lambda mid: variations.EXERCISES[mid]
+templates.env.globals["rest_note"] = variations.REST_BETWEEN
+templates.env.globals["vzone"] = pass_context(lambda ctx, z: variations.zone_text(z, ctx.get("hrmax"), ctx.get("lang", "en")))
+templates.env.globals["vfill"] = pass_context(lambda ctx, st: variations.fill(
+    st[ctx.get("lang") == "id"], ctx.get("hrmax"), ctx.get("paces") or {}, ctx.get("lang", "en")))
+templates.env.globals["pmsg"] = pass_context(lambda ctx, r: P.phase_message(r, ctx.get("lang", "en")))
+templates.env.globals["phase_label"] = pass_context(lambda ctx, k: P.PHASES[k]["label"][ctx.get("lang") == "id"])
 templates.env.globals["svar"] = sessions.variation
 # Cache-buster for static links: Cloudflare caches /static for hours, file mtime changes on each deploy.
 templates.env.globals["v"] = int((HERE / "static" / "style.css").stat().st_mtime)
@@ -204,7 +211,8 @@ def create_plan(request: Request, background: BackgroundTasks, event_date: str =
         goal_s = parse_goal(goal_minutes)
         runs = strava.recent_runs(user)
         stats = strava.stats_from_runs(runs)
-        days = build_plan(stats, distance, date.fromisoformat(event_date), runs_per_week, goal_s)
+        days = build_plan(stats, distance, date.fromisoformat(event_date), runs_per_week, goal_s,
+                          prefs=service.prefs(user["id"]).get("var"))
     except ValueError as e:
         return templates.TemplateResponse(request, "new.html", {
             "user": user, "distances": DISTANCES_KM, "error": str(e)}, status_code=400)
@@ -228,7 +236,21 @@ def show_plan(request: Request, background: BackgroundTasks):
         return RedirectResponse("/new")
     t = service.today()
     monday = (t - timedelta(days=t.weekday())).isoformat()
-    days = [d for d in service.days_with_runs(user["id"], saved) if d["date"] >= monday]
+    all_days = service.days_with_runs(user["id"], saved)
+    days = [d for d in all_days if d["date"] >= monday]
+    lang = request_lang(request)
+    li = lang == "id"
+    phases = [{**ph, "n": i + 1, "label": P.PHASES[ph["key"]]["label"][li], "goal": P.PHASES[ph["key"]]["goal"][li],
+               "checkpoint_text": P.checkpoint_text(ph, lang)} for i, ph in enumerate(P.plan_phases(all_days))]
+    phase_now = next((x for x in phases if x["start"] <= t.isoformat() <= x["end"]), phases[0] if phases else None)
+    if phase_now:
+        so_far = P.evaluate_phase({**phase_now, "end": (t - timedelta(days=1)).isoformat()}, all_days)
+        phase_now["progress"] = so_far["ratio"] if so_far["sessions"] else None
+    hrmax, src = service.max_hr_info(user["id"])
+    age = service.prefs(user["id"]).get("age")
+    hr_note = (i18n.t("Max heart rate", lang) + f" {hrmax} bpm (Tanaka: 208 − 0.7 × {age})" if src == "tanaka" else
+               i18n.t("Max heart rate", lang) + f" {hrmax} bpm. " + i18n.t("highest seen in your runs; add your age in Settings to use the Tanaka formula.", lang)
+               if src == "observed" else i18n.t("Add your age in Settings to see heart-rate ranges in bpm.", lang))
     soon = {t.isoformat(), (t + timedelta(days=1)).isoformat()}
     if any(not d.get("why") for d in days if d["date"] in soon):
         background.add_task(service.ensure_notes, user["id"])  # safety net if the nightly job hasn't run yet
@@ -241,7 +263,42 @@ def show_plan(request: Request, background: BackgroundTasks):
         "user": user, "plan": saved, "weeks": weeks, "today": t.isoformat(), "coach_on": coach.enabled(),
         "summary": db.get_summary(user["id"]), "m": service.current_metrics(user["id"], saved),
         "chart": service.chart(user["id"], saved), "recent": service.recent_runs(user["id"]),
+        "phases": phases, "phase_now": phase_now, "checkpoints": {x["checkpoint"] for x in phases if x["checkpoint"]},
+        "phase_results": [d["checkpoint_result"] for d in all_days if d.get("checkpoint_result")],
+        "hrmax": hrmax, "hr_note": hr_note, "paces": service.plan_paces(saved),
         "date": date, "days_left": (date.fromisoformat(saved["params"]["event_date"]) - t).days})
+
+
+FAMILIES = [("EASY", "Easy runs"), ("LONG", "Long runs"), ("TEMPO", "Tempo runs"), ("INT", "Intervals"),
+            ("SBW", "Strength (bodyweight)")]
+
+
+@app.get("/settings")
+def settings_page(request: Request):
+    user = current_user(request)
+    if not user:
+        return RedirectResponse("/")
+    hrmax, src = service.max_hr_info(user["id"])
+    opts = {fam: (variations.STRENGTH if fam == "SBW" else variations.V[fam]) for fam, _ in FAMILIES}
+    return templates.TemplateResponse(request, "settings.html", {
+        "user": user, "prefs": service.prefs(user["id"]), "families": FAMILIES, "opts": opts,
+        "hrmax": hrmax, "hr_src": src, "saved_ok": request.query_params.get("saved")})
+
+
+@app.post("/settings")
+async def settings_save(request: Request):
+    user = current_user(request)
+    if not user:
+        return RedirectResponse("/", status_code=303)
+    form = await request.form()
+    age = (form.get("age") or "").strip()
+    new = {"age": int(age) if age.isdigit() and 10 <= int(age) <= 100 else None, "var": {}}
+    for fam, _ in FAMILIES:
+        valid = {v["id"] for v in (variations.STRENGTH if fam == "SBW" else variations.V[fam])}
+        if form.get(f"var_{fam}") in valid:
+            new["var"][fam] = form.get(f"var_{fam}")
+    service.save_prefs(user["id"], new)
+    return RedirectResponse("/settings?saved=1", status_code=303)
 
 
 @app.post("/plan/variation")

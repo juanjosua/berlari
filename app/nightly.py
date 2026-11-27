@@ -15,7 +15,8 @@ def main() -> None:
         uids = [r[0] for r in c.execute("SELECT user_id FROM plans")]
     for uid in uids:
         try:
-            service.adapt_plan(uid)  # first, so tomorrow's note describes the adjusted session
+            service.evaluate_phases(uid)
+            service.adapt_plan(uid)  # before notes, so tomorrow's note describes the adjusted session
         except Exception:
             service.log.exception("adapt_plan failed for user %s", uid)
         service.ensure_notes(uid)

@@ -163,3 +163,24 @@ def test_choose_variation_only_for_upcoming_sessions(monkeypatch):
     assert not service.set_variation(801, d["date"], idx, "sprints")  # not a long-run variation
     assert not service.set_variation(801, "2000-01-01", 0, "classic")  # past/unknown day
     db.delete_user(801)
+
+
+def test_settings_age_gives_tanaka_max_hr_and_defaults_apply(monkeypatch):
+    from app import service
+    db.init()
+    monkeypatch.setattr(strava, "exchange_code", lambda code: (
+        db.save_user(901, "Set Runner", "a", "r", int(time.time()) + 3600), {"athlete": {"id": 901}})[1])
+    monkeypatch.setattr(strava, "recent_runs", lambda u: [])
+    c = TestClient(main.app, follow_redirects=False)
+    state = c.get("/auth/login").headers["location"].split("state=")[1]
+    c.get("/auth/callback", params={"code": "x", "state": state})
+    c.post("/new", data={"event_date": (date.today() + timedelta(weeks=16)).isoformat(), "distance": "10k"})
+    c.post("/settings", data={"age": "30", "var_INT": "pyramid", "var_EASY": "", "var_LONG": "bogus"})
+    assert service.max_hr_info(901) == (187, "tanaka")  # 208 - 0.7 * 30 = 187
+    future = [x for d in db.get_plan(901)["days"] if d["date"] >= date.today().isoformat()
+              for x in d["sessions"] if x["type"] == "INT"]
+    assert future and all(x["var"] == "pyramid" for x in future)
+    page = c.get("/plan").text
+    assert "187 bpm" in page and "Tanaka" in page and "Checkpoint" in page
+    assert "Settings" in c.get("/settings").text
+    db.delete_user(901)

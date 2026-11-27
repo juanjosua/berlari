@@ -7,7 +7,8 @@ from functools import wraps
 
 from . import coach, db, fitness, strava
 from . import sessions as S
-from .plan import Stats, adapt, paces
+from .plan import (PHASES, Stats, adapt, adjust_after_failed_phase, evaluate_phase, paces,  # noqa: F401
+                   plan_phases)
 
 log = logging.getLogger("berlari")
 _busy: set[tuple[str, int]] = set()  # (task, user) running now: page refreshes don't stack LLM calls
@@ -47,9 +48,44 @@ def seed_activities(uid: int, runs: list[dict]) -> None:
         db.save_activity(uid, a["id"], a["start_date_local"][:10], strava.run_summary(a))
 
 
+def prefs(uid: int) -> dict:
+    raw = (db.get_user(uid) or {}).get("prefs")
+    return json.loads(raw) if raw else {}
+
+
+def max_hr_info(uid: int) -> tuple[int | None, str | None]:
+    """(max HR, source). Tanaka formula 208 - 0.7 x age when the athlete gave their age (Strava doesn't share
+    it); otherwise the highest HR seen in their activities if it looks like a real maximum."""
+    age = prefs(uid).get("age")
+    if age:
+        return round(208 - 0.7 * age), "tanaka"
+    seen = max((a["data"].get("max_hr") or 0 for a in db.get_activities(uid)), default=0)
+    return (round(seen), "observed") if seen >= 150 else (None, None)
+
+
 def max_hr(uid: int) -> float:
-    """Highest heart rate seen in the athlete's activities (for 'hard effort' checks); 190 if none."""
-    return max((a["data"].get("max_hr") or 0 for a in db.get_activities(uid)), default=0) or 190
+    return max_hr_info(uid)[0] or 190  # checks need a number; 190 only when nothing is known
+
+
+def save_prefs(uid: int, new: dict) -> None:
+    """Save age + default variations, and re-apply defaults to upcoming sessions the athlete didn't pick by hand."""
+    db.set_prefs(uid, new)
+    defaults = new.get("var") or {}
+
+    def apply(by_date):
+        for k, d in by_date.items():
+            if k < today().isoformat():
+                continue
+            touched = False
+            for x in d.get("sessions") or []:
+                fam = S.FAMILY.get(x["type"])
+                if fam and not x.get("var_set") and (defaults.get(fam) or x.get("rec")):
+                    want = defaults.get(fam) or x.get("rec")
+                    if x.get("var") != want:
+                        x["var"], touched = want, True
+            if touched:
+                d.pop("why", None)
+    db.update_days(uid, apply)
 
 
 def days_with_runs(uid: int, saved: dict) -> list[dict]:
@@ -84,8 +120,8 @@ def set_variation(uid: int, day: str, idx: int, var: str) -> bool:
     def apply(by_date):
         d = by_date.get(day)
         sess = (d or {}).get("sessions") or []
-        if d and day >= today().isoformat() and 0 <= idx < len(sess) and var in [v[0] for v in S.variations(sess[idx])]:
-            sess[idx]["var"] = var
+        if d and day >= today().isoformat() and 0 <= idx < len(sess) and var in [v["id"] for v in S.variations(sess[idx])]:
+            sess[idx]["var"], sess[idx]["var_set"] = var, True
             d.pop("why", None)
             ok.append(True)
     db.update_days(uid, apply)
@@ -137,6 +173,35 @@ def change_language(uid: int, lang: str) -> bool:
     db.update_days(uid, lambda by_date: [by_date[k].pop("why", None) for k in soon if k in by_date])
     db.delete_summary(uid)
     return True
+
+
+def evaluate_phases(uid: int) -> list[dict]:
+    """Nightly: on (or after) a phase's checkpoint day, judge the phase. If the goal wasn't reached, make the
+    next phase lighter. The result is stored on the checkpoint day and shown on the plan page."""
+    saved = db.get_plan(uid)
+    if not saved or saved["params"].get("source") == "custom":
+        return []
+    days = days_with_runs(uid, saved)
+    by_date = {d["date"]: d for d in days}
+    phases, t, done = plan_phases(days), today().isoformat(), []
+    for i, ph in enumerate(phases):
+        cp = by_date.get(ph["checkpoint"] or "")
+        if not cp or cp.get("checkpoint_result"):
+            continue
+        long_state = next((c.get("state") for x, c in zip(cp["sessions"], cp["checks"]) if x["type"] == "LONG"), None)
+        if not (ph["checkpoint"] < t or (ph["checkpoint"] == t and long_state == "done")):
+            continue
+        res = evaluate_phase(ph, days)
+        nxt = phases[i + 1] if i + 1 < len(phases) else None
+        res["phase"], res["next"] = ph["key"], nxt["key"] if nxt else None
+        res["adjusted"] = 0
+        if not res["passed"] and nxt and nxt["key"] in ("build1", "build2", "peak"):
+            box = []
+            db.update_days(uid, lambda bd: box.append(adjust_after_failed_phase(bd, nxt["key"], ph["checkpoint"])))
+            res["adjusted"] = box[0] if box else 0
+        db.update_days(uid, lambda bd: bd[ph["checkpoint"]].__setitem__("checkpoint_result", res))
+        done.append(res)
+    return done
 
 
 @coach_task

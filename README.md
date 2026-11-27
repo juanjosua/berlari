@@ -93,6 +93,17 @@ progressive; recovery, strides, progression, trail; fast-finish, race-pace block
 whose structure is visible in Strava data are offered: each run's speed and heart rate are kept as 5-second samples,
 and the check looks for the expected fast efforts, tempo blocks, pace build-up or heart-rate caps.
 
+Each variation explains what it is and gives step-by-step instructions with the athlete's own heart-rate
+ranges and paces (`app/variations.py`). Strength is bodyweight only, as three routines with every exercise
+explained. Max heart rate uses the Tanaka formula (208 − 0.7 × age) once the athlete enters their age in
+Settings (Strava's API doesn't share age); otherwise the highest heart rate seen in their runs.
+In Settings the athlete can also pick their own default variation per session type.
+
+Phases: generated plans are split into Base, Build 1, Build 2, Peak and Taper, each with a goal and a
+checkpoint (the phase's last long run). On the checkpoint the phase is judged (75%+ of sessions done and the
+checkpoint long run done); if it fails, the next phase is made ~15% lighter with run-walk / walk breaks, and
+the plan page explains why and what to focus on.
+
 Custom plans: write a JSON file (see `examples/bfi-run-2027-half-marathon.json`, built by
 `examples/build_bfi_2027.py`) and load it with `python -m app.import_plan <athlete_id> <file.json>`.
 Custom plans are followed as written (no automatic adjustments).

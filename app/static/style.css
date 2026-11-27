@@ -201,3 +201,20 @@ header { position: relative; z-index: 10; }
 .vopt { display: flex; gap: 8px; align-items: flex-start; padding: 6px 0; border-top: 1px solid var(--line); font-size: .85rem; color: var(--muted); cursor: pointer; }
 .vopt input { flex: 0 0 18px; width: 18px; height: 18px; padding: 0; margin: 2px 0 0; display: inline-block; accent-color: var(--orange); }
 .vopt b { color: var(--fg); }
+/* Phases, variation details, strength moves */
+.phase-card { margin-top: 12px; }
+.phase-h { margin: 1.75rem 0 .25rem; font-size: 1.05rem; color: var(--orange-dark); }
+@media (prefers-color-scheme: dark) { .phase-h { color: var(--orange); } }
+.result { margin: 8px 0 0; padding: 8px 10px; border-radius: 8px; font-size: .9rem; }
+.result.passed { background: color-mix(in srgb, #1f9d55 15%, transparent); }
+.result.failed { background: color-mix(in srgb, #d98a00 18%, transparent); }
+.badge.checkpoint { background: var(--navy-500); }
+.var .hr { color: var(--fg); font-size: .85rem; font-weight: 600; margin-top: 2px; }
+.how summary { cursor: pointer; font-size: .82rem; font-weight: 700; margin-top: 4px; color: var(--fg); }
+.how ol { margin: 6px 0 0; padding-left: 18px; font-size: .88rem; color: var(--muted); }
+.how ol li { margin-bottom: 4px; }
+.moves { list-style: none; padding: 0; margin: 6px 0; }
+.moves li { border-top: 1px solid var(--line); padding: 4px 0; font-size: .88rem; }
+.moves summary { cursor: pointer; color: var(--fg); }
+.moves details span { display: block; margin: 4px 0 2px; color: var(--muted); }
+.phases { padding-left: 18px; margin: 6px 0 0; } .phases li { margin-bottom: 8px; }
