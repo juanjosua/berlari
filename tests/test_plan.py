@@ -97,3 +97,31 @@ def test_phases_checkpoints_evaluation_and_adjustment():
     msg = phase_message(bad | {"phase": "base", "next": "build1", "adjusted": n})
     assert "not reached" in msg and "lighter" in msg
     assert "belum tercapai" in phase_message(bad | {"phase": "base", "next": "build1", "adjusted": n}, "id")
+
+
+def test_paces_follow_race_pace_logic():
+    from app.plan import paces
+    p = paces(STATS, "half", 3 * 3600)  # 3:00 half = 8:32/km race pace
+    assert p["interval"] < p["tempo"] < p["race"] < p["easy"]  # tempo must be faster than half-marathon pace
+    assert round(p["race"]) == 512 and round(p["tempo"]) == 500 and round(p["easy"]) == 572
+    q = paces(STATS, "5k", 30 * 60)
+    assert q["interval"] < q["race"] < q["tempo"] < q["easy"]  # 5K race pace is faster than tempo
+
+
+def test_beginner_half_peaks_lower_with_last_long_run_three_weeks_out():
+    from datetime import timedelta
+    race = date(2027, 5, 30)
+    days = build_plan(Stats(7, 4.6, 565), "half", race, 4, 3 * 3600, today=date(2026, 11, 28))
+    weeks = {}
+    for d in days:
+        k = date.fromisoformat(d.date) - timedelta(days=date.fromisoformat(d.date).weekday())
+        weeks[k] = weeks.get(k, 0) + d.km
+    assert max(weeks.values()) <= 40  # beginner cap (38 km) instead of 55
+    longs = [(d.date, x["km"]) for d in days for x in d.sessions if x["type"] == "LONG"]
+    peak_km = max(km for _, km in longs)
+    assert 16 <= peak_km <= 21
+    last_peak = max(dt for dt, km in longs if km == peak_km)
+    assert (race - date.fromisoformat(last_peak)).days >= 20  # biggest long run ~3 weeks before the race
+    race_week = [d for d in days if (race - date.fromisoformat(d.date)).days < 7]
+    assert sum(d.km for d in race_week if d.kind != "race") < 12  # light race week
+    assert any(x["type"] == "TEMPO" for d in days if d.phase in ("build2", "peak") for x in d.sessions)

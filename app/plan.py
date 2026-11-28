@@ -7,7 +7,11 @@ from .sessions import describe, kind_of
 DISTANCES_KM = {"5k": 5.0, "10k": 10.0, "half": 21.0975, "marathon": 42.195}
 # Peak weekly km and taper weeks per distance.
 PEAK_KM = {"5k": 35, "10k": 45, "half": 55, "marathon": 70}
-TAPER_WEEKS = {"5k": 1, "10k": 1, "half": 2, "marathon": 3}
+TAPER_WEEKS = {"5k": 1, "10k": 1, "half": 3, "marathon": 3}  # half: last long run lands 3 weeks before race day
+# Beginners (low volume / slow pace) peak lower: 50+ km weeks at 9+ min/km are 8+ hours of running.
+BEGINNER_PEAK_KM = {"5k": 25, "10k": 30, "half": 38, "marathon": 55}
+# Training paces as offsets (s/km) from race pace: (easy, tempo, interval). Tempo ~ threshold, interval ~ 5K pace.
+PACE_OFFSETS = {"5k": (90, 20, -3), "10k": (75, 10, -12), "half": (60, -12, -35), "marathon": (45, -20, -45)}
 # Long run cap as share of race distance (marathon long run caps ~32 km).
 LONG_CAP_KM = {"5k": 12, "10k": 16, "half": 21, "marathon": 32}
 # Which weekdays (Mon=0) to run, by runs/week. Long run is always the last listed day.
@@ -47,14 +51,11 @@ def fmt_pace(s: float) -> str:
 
 
 def paces(stats: Stats, distance: str, goal_s: int | None) -> dict:
-    """Return easy/tempo/interval/race paces in s/km."""
-    if goal_s:
-        race = goal_s / DISTANCES_KM[distance]
-        easy = race + {"5k": 90, "10k": 75, "half": 60, "marathon": 45}[distance]
-    else:
-        easy = stats.easy_pace_s
-        race = easy - {"5k": 75, "10k": 60, "half": 45, "marathon": 30}[distance]
-    return {"easy": easy, "tempo": easy - 50, "interval": easy - 80, "race": race}
+    """Return easy/tempo/interval/race paces in s/km, all derived from race pace (goal time, or estimated
+    from the athlete's typical easy pace)."""
+    e, t, i = PACE_OFFSETS[distance]
+    race = goal_s / DISTANCES_KM[distance] if goal_s else stats.easy_pace_s - e
+    return {"easy": race + e, "tempo": race + t, "interval": race + i, "race": race}
 
 
 def weekly_targets(start_km: float, peak_km: float, weeks: int, taper: int) -> list[float]:
@@ -62,7 +63,7 @@ def weekly_targets(start_km: float, peak_km: float, weeks: int, taper: int) -> l
     build_weeks = max(weeks - taper, 0)
     vols, v = [], start_km
     for i in range(build_weeks):
-        if (i + 1) % 4 == 0:
+        if (i + 1) % 4 == 0 and i != build_weeks - 1:  # the week before the taper holds the biggest long run
             vols.append(round(v * 0.8, 1))  # cutback, don't advance v
         else:
             v = min(v * 1.10, peak_km) if i else v
@@ -88,15 +89,15 @@ def build_plan(stats: Stats, distance: str, event: date, runs_per_week: int,
     start = today - timedelta(days=today.weekday())
     weeks = (event - start).days // 7 + 1
     start_km = max(stats.weekly_km, 10.0)
-    peak = max(PEAK_KM[distance], start_km)
+    # Beginners (low volume or slow easy pace) start with run-walk and Norwegian 4x4, and peak lower.
+    beginner = stats.weekly_km < 12 or stats.easy_pace_s > 450
+    peak = max((BEGINNER_PEAK_KM if beginner else PEAK_KM)[distance], start_km)
     vols = weekly_targets(start_km, peak, weeks, TAPER_WEEKS[distance])
     p = paces(stats, distance, goal_s)
     run_days = RUN_DAYS[runs_per_week]
     long_cap = LONG_CAP_KM[distance]
     longest = max(stats.longest_km, 5.0)
 
-    # Beginners (low volume or slow easy pace) start with run-walk and Norwegian 4x4 instead of track intervals.
-    beginner = stats.weekly_km < 12 or stats.easy_pace_s > 450
     build_weeks = len(vols) - min(TAPER_WEEKS[distance], len(vols))
     long_dow = run_days[-1]
     rest_dows = [x for x in range(7) if x not in run_days and x != (long_dow - 1) % 7]
@@ -115,12 +116,17 @@ def build_plan(stats: Stats, distance: str, event: date, runs_per_week: int,
         # the long build block is split in two so there's a checkpoint roughly every 6-8 weeks
         tag = "build1" if phase == "build" and w < (base_end + peak_start) // 2 else "build2" if phase == "build" else phase
         wu = w % 3  # warm-up variation of the week
-        # Long run ~35% of week, grows <= 1.5 km/week from current longest, capped per distance.
-        long_km = round(min(vol * 0.35, longest + 1.5 * (w + 1), long_cap), 1)
+        # Long run ~35% of the week (45% for beginners, whose weeks are smaller), grows <= 1.5 km/week from the
+        # current longest, capped per distance.
+        long_km = round(min(vol * (0.45 if beginner else 0.35), longest + 1.5 * (w + 1), long_cap), 1)
         quality_km = round(vol * 0.2, 1)
         n_easy = runs_per_week - 2
         easy_km = round(max((vol - long_km - quality_km) / n_easy, 3.0), 1) if n_easy else 0
-        quality = "TEMPO" if phase == "taper" else "INT" if beginner else ["INT", "TEMPO", "INT"][w % 3]
+        # beginners: intervals (Norwegian 4x4) first; from Build 2 on, every other week a tempo run to practise
+        # holding a pace just faster than race pace
+        quality = ("TEMPO" if phase == "taper" else
+                   ["INT", "TEMPO"][w % 2] if beginner and tag in ("build2", "peak") else
+                   "INT" if beginner else ["INT", "TEMPO", "INT"][w % 3])
         run_walk = beginner and phase == "base"
         rounds = {"base": 2, "build": 3, "peak": 2, "taper": 1}[phase]
         for dow in range(7):
