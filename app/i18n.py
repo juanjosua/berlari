@@ -93,6 +93,9 @@ ID = {
         "tertentu, konsultasikan ke dokter atau ahli gizi.",
     "Fill in About you (age, sex, height, weight) to get daily meal suggestions.":
         "Isi Tentang kamu (umur, jenis kelamin, tinggi, berat) untuk mendapat saran makan harian.",
+    "Your body uses about": "Tubuhmu memakai sekitar",
+    "today (resting + daily life + training). Eat about": "hari ini (istirahat + aktivitas harian + latihan). Makan sekitar",
+    "less, which is about": "lebih sedikit, sekitar",
     "Week of": "Minggu", "Adjusted": "Disesuaikan", "Ran": "Lari", "in": "dalam", "min": "mnt",
     "Easy": "Santai", "Long": "Lari jauh", "Intervals": "Interval", "Tempo": "Tempo", "Rest": "Istirahat",
     "Race": "Lomba",

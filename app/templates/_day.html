@@ -43,7 +43,8 @@
         {% if d.review %}<p class="review">{{ d.review }}</p>{% endif %}
         {% if d.food %}{% set li = 1 if lang == "id" else 0 %}{% set f = d.food %}
         <details class="food"><summary>🍽 {{ t("Meals") }} · {{ "{:,}".format(f.target.kcal) }} kcal · {{ f.target.protein }} g {{ t("protein") }}</summary>
-          <p class="small muted">{{ t("Target") }}: {{ "{:,}".format(f.target.kcal) }} kcal, {{ f.target.protein }} g {{ t("protein") }}, {{ f.target.carbs }} g {{ t("carbs") }}{% if f.target.deficit %} · {{ t("about") }} {{ f.target.loss_per_week_kg }} kg/{{ t("week") }} {{ t("weight loss") }}{% endif %}</p>
+          <p class="small">{{ t("Your body uses about") }} <b>{{ "{:,}".format(f.target.burn) }} kcal</b> {{ t("today (resting + daily life + training). Eat about") }} <b>{{ "{:,}".format(f.target.kcal) }} kcal</b>{% if f.target.deficit %}: {{ "{:,}".format(f.target.deficit) }} kcal {{ t("less, which is about") }} {{ f.target.loss_per_week_kg }} kg/{{ t("week") }} {{ t("weight loss") }}{% endif %}.</p>
+          <p class="small muted">{{ t("Target") }}: {{ f.target.protein }} g {{ t("protein") }}, {{ f.target.carbs }} g {{ t("carbs") }}</p>
           {% for key, name in meal_slots %}{% if f.menu.meals.get(key) %}
           <div class="meal"><b>{{ name[li] }}</b>
             <ul>{% for fid, n in grouped(f.menu.meals[key]) %}{% set x = food(fid) %}
