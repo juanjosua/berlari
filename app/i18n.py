@@ -96,6 +96,10 @@ ID = {
     "Your body uses about": "Tubuhmu memakai sekitar",
     "today (resting + daily life + training). Eat about": "hari ini (istirahat + aktivitas harian + latihan). Makan sekitar",
     "less, which is about": "lebih sedikit, sekitar",
+    "When do you eat rice?": "Kapan kamu makan nasi?", "Every day": "Setiap hari",
+    "Only on weekends (at home)": "Hanya akhir pekan (di rumah)", "Never": "Tidak pernah", "for the day": "untuk hari ini",
+    "Prices are rough Jakarta-area estimates; stalls and promos vary. Home meals are priced as if bought at a stall.":
+        "Harga adalah perkiraan kasar area Jakarta; tiap warung dan promo berbeda. Makanan rumah dihitung seperti beli di warung.",
     "Week of": "Minggu", "Adjusted": "Disesuaikan", "Ran": "Lari", "in": "dalam", "min": "mnt",
     "Easy": "Santai", "Long": "Lari jauh", "Intervals": "Interval", "Tempo": "Tempo", "Rest": "Istirahat",
     "Race": "Lomba",

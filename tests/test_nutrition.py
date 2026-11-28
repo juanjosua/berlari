@@ -27,8 +27,21 @@ def test_meals_reach_target_and_use_real_foods():
         assert abs(m["kcal"] - t["kcal"]) <= 150 and m["protein"] >= t["protein"] * 0.9
         assert all(f in FOODS for items in m["meals"].values() for f in items)
     long = day_meals(7, [{"type": "LONG", "km": 15}], targets(102, 170, 30, "M", [{"type": "LONG", "km": 15}], EASY, 100))
-    assert long["meals"]["during"] == ["isotonic"] and long["meals"]["pre_run"] == ["banana", "yogurt_drink"]
+    assert long["meals"]["during"] == ["isotonic"] and long["meals"]["pre_run"] == ["banana"]
+    assert long["meals"]["after_run"][:2] == ["yogurt_drink", "banana"]
     rest = day_meals(7, [{"type": "REST"}], targets(102, 170, 30, "M", [{"type": "REST"}], EASY, 100))
     assert set(rest["meals"]) == {"lunch", "afternoon"}  # no breakfast or dinner
     assert day_meals(1, [], {"kcal": 1500})["meals"] != day_meals(2, [], {"kcal": 1500})["meals"]  # varies by day
     assert grouped(["rice", "egg", "rice"]) == [("rice", 2), ("egg", 1)]
+
+
+def test_rice_preference_weekend_home_meals_and_price():
+    t = targets(102, 170, 30, "M", [{"type": "SBW"}], EASY, 100)
+    weekday = day_meals(5, [{"type": "SBW"}], t, rice="weekend", weekend=False)
+    weekend = day_meals(5, [{"type": "SBW"}], t, rice="weekend", weekend=True)
+    flat = lambda m: [f for v in m["meals"].values() for f in v]  # noqa: E731
+    assert "rice" not in flat(weekday) and "onigiri" not in flat(weekday)
+    assert set(weekend["meals"]) == {"home_1", "home_2"} and flat(weekend).count("rice") >= 2
+    assert all(m.count("rice") <= 2 and m.count("egg") <= 1 for m in weekend["meals"].values())
+    assert weekday["price"] == sum(FOODS[f][5] for f in flat(weekday)) and 30000 < weekday["price"] < 100000
+    assert "rice" in flat(day_meals(5, [{"type": "SBW"}], t))  # default: rice every day

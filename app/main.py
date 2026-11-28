@@ -84,6 +84,8 @@ def parse_body(form, old: dict) -> dict:
     out = {}
     if form.get("sex") in ("M", "F"):
         out["sex"] = form.get("sex")
+    if form.get("rice") in ("daily", "weekend", "none"):
+        out["rice"] = form.get("rice")
     for key, lo, hi in (("age", 10, 100), ("height_cm", 120, 230), ("weight_kg", 30, 250)):
         raw = (form.get(key) or "").strip().replace(",", ".")
         try:

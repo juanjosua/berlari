@@ -5,6 +5,12 @@
       <option value="M" {% if prefs.sex == "M" %}selected{% endif %}>{{ t("Male") }}</option>
       <option value="F" {% if prefs.sex == "F" %}selected{% endif %}>{{ t("Female") }}</option></select>
   </label>
+  <label>{{ t("When do you eat rice?") }}
+    <select name="rice">
+      <option value="daily" {% if prefs.rice in (none, "daily") %}selected{% endif %}>{{ t("Every day") }}</option>
+      <option value="weekend" {% if prefs.rice == "weekend" %}selected{% endif %}>{{ t("Only on weekends (at home)") }}</option>
+      <option value="none" {% if prefs.rice == "none" %}selected{% endif %}>{{ t("Never") }}</option></select>
+  </label>
   <div class="row3">
     <label>{{ t("Age") }}<input type="number" name="age" inputmode="numeric" min="10" max="100" value="{{ prefs.age or '' }}"></label>
     <label>{{ t("Height (cm)") }}<input type="number" name="height_cm" inputmode="decimal" min="120" max="230" step="0.1" value="{{ prefs.height_cm or '' }}"></label>

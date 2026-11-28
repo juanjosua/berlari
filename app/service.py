@@ -65,7 +65,9 @@ def nutrition(uid: int, saved: dict, day: dict) -> dict | None:
     sess = day.get("sessions") or []
     t = N.targets(p["weight_kg"], p["height_cm"], p["age"], p["sex"], sess, plan_paces(saved)["easy"], days_to_race)
     idx = date.fromisoformat(day["date"]).toordinal()
-    return {"target": t, "menu": N.day_meals(idx, sess, t), "tip": N.TIPS[idx % len(N.TIPS)]}
+    weekend = date.fromisoformat(day["date"]).weekday() >= 5
+    menu = N.day_meals(idx, sess, t, p.get("rice") or "daily", weekend)
+    return {"target": t, "menu": menu, "tip": N.TIPS[idx % len(N.TIPS)]}
 
 
 def bmi(uid: int) -> float | None:

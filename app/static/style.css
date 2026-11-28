@@ -235,3 +235,4 @@ header { position: relative; z-index: 10; }
 .food .meal { margin-top: 6px; font-size: .88rem; }
 .food .meal ul { margin: 2px 0 0; padding-left: 18px; color: var(--muted); }
 .food .tip { background: var(--bg); padding: 6px 8px; border-radius: 8px; }
+.food .price { float: right; color: var(--fg); font-weight: 600; font-size: .82rem; margin-left: 6px; }
