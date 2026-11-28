@@ -264,3 +264,28 @@ def test_meal_suggestions_need_profile_then_show(monkeypatch):
     page = c.get("/plan").text
     assert "Meals" in page and "kcal" in page and "Indomaret" in page
     db.delete_user(931)
+
+
+def test_activity_setting_saved_and_used_per_day_type(monkeypatch):
+    from app import service
+    db.init()
+    monkeypatch.setattr(strava, "exchange_code", lambda code: (
+        db.save_user(941, "Active Runner", "a", "r", int(time.time()) + 3600), {"athlete": {"id": 941}})[1])
+    monkeypatch.setattr(strava, "recent_runs", lambda u: [])
+    c = TestClient(main.app, follow_redirects=False)
+    state = c.get("/auth/login").headers["location"].split("state=")[1]
+    c.get("/auth/callback", params={"code": "x", "state": state})
+    c.post("/new", data={"event_date": (date.today() + timedelta(weeks=10)).isoformat(), "distance": "10k"})
+    assert 'name="activity_weekday"' in c.get("/settings").text
+    c.post("/settings", data={"age": "30", "sex": "M", "height_cm": "170", "weight_kg": "102",
+                              "activity_weekday": "light", "activity_weekend": "sitting"})
+    p = service.prefs(941)
+    assert p["activity_weekday"] == "light" and p["activity_weekend"] == "sitting"
+    saved = db.get_plan(941)
+    rest_days = [d for d in saved["days"] if d["kind"] == "rest"]
+    wk = next(d for d in rest_days if date.fromisoformat(d["date"]).weekday() < 5)
+    we = next((d for d in rest_days if date.fromisoformat(d["date"]).weekday() >= 5), None)
+    burn_wk = service.nutrition(941, saved, wk)["target"]["burn"]
+    if we:
+        assert service.nutrition(941, saved, we)["target"]["burn"] < burn_wk
+    db.delete_user(941)

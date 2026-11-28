@@ -58,3 +58,12 @@ def test_weekday_budget_caps_price_and_flags_shortfall():
     home = day_meals(5, [{"type": "REST"}], targets(102, 170, 30, "M", [{"type": "REST"}], EASY, 100),
                      rice="weekend", weekend=True, budget=40000)
     assert not home["budget_limited"]  # weekend family meals aren't limited by the weekday budget
+
+
+def test_activity_level_changes_daily_burn():
+    from app.nutrition import ACTIVITY
+    base = targets(102, 170, 30, "M", [{"type": "REST"}], EASY, 100)
+    light = targets(102, 170, 30, "M", [{"type": "REST"}], EASY, 100, ACTIVITY["light"][0])
+    sitting = targets(102, 170, 30, "M", [{"type": "REST"}], EASY, 100, ACTIVITY["sitting"][0])
+    assert sitting["burn"] < base["burn"] < light["burn"]
+    assert abs(light["burn"] - round(bmr(102, 170, 30, "M") * 1.35, -1)) <= 10

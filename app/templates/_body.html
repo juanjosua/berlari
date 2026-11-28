@@ -5,6 +5,16 @@
       <option value="M" {% if prefs.sex == "M" %}selected{% endif %}>{{ t("Male") }}</option>
       <option value="F" {% if prefs.sex == "F" %}selected{% endif %}>{{ t("Female") }}</option></select>
   </label>
+  {% set li = 1 if lang == "id" else 0 %}
+  <div class="row2">
+  {% for key, label in (("activity_weekday", "Daily activity on weekdays"), ("activity_weekend", "Daily activity on weekends")) %}
+  <label>{{ t(label) }} <span class="muted">{{ t("(outside training)") }}</span>
+    <select name="{{ key }}"><option value="">{{ t("Not set (average)") }}</option>
+      {% for k, v in activity_levels.items() %}<option value="{{ k }}" {% if prefs.get(key) == k %}selected{% endif %}>{{ v[1][li] }}: {{ v[2][li] }}</option>{% endfor %}
+    </select>
+  </label>
+  {% endfor %}
+  </div>
   <label>{{ t("When do you eat rice?") }}
     <select name="rice">
       <option value="daily" {% if prefs.rice in (none, "daily") %}selected{% endif %}>{{ t("Every day") }}</option>

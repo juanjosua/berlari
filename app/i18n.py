@@ -104,6 +104,8 @@ ID = {
     "Your budget covers about": "Budgetmu cukup untuk sekitar",
     "under today's target. Fine for weight loss on easy days; on hard days add a banana or a Fitbar if you feel drained.":
         "di bawah target hari ini. Tidak masalah untuk turun berat di hari ringan; di hari berat tambah pisang atau Fitbar bila terasa lemas.",
+    "Daily activity on weekdays": "Aktivitas harian di hari kerja", "Daily activity on weekends": "Aktivitas harian di akhir pekan",
+    "(outside training)": "(di luar latihan)", "Not set (average)": "Belum diisi (rata-rata)",
     "Week of": "Minggu", "Adjusted": "Disesuaikan", "Ran": "Lari", "in": "dalam", "min": "mnt",
     "Easy": "Santai", "Long": "Lari jauh", "Intervals": "Interval", "Tempo": "Tempo", "Rest": "Istirahat",
     "Race": "Lomba",

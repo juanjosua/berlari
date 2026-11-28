@@ -236,3 +236,4 @@ header { position: relative; z-index: 10; }
 .food .meal ul { margin: 2px 0 0; padding-left: 18px; color: var(--muted); }
 .food .tip { background: var(--bg); padding: 6px 8px; border-radius: 8px; }
 .food .price { float: right; color: var(--fg); font-weight: 600; font-size: .82rem; margin-left: 6px; }
+.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } @media (max-width: 420px) { .row2 { grid-template-columns: 1fr; } }

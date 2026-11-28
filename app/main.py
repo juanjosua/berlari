@@ -55,6 +55,7 @@ templates.env.globals["exercise"] = lambda mid: variations.EXERCISES[mid]
 templates.env.globals["food"] = lambda fid: nutrition.FOODS[fid]
 templates.env.globals["grouped"] = lambda items: nutrition.grouped(items)
 templates.env.globals["meal_slots"] = nutrition.SLOTS
+templates.env.globals["activity_levels"] = nutrition.ACTIVITY
 templates.env.globals["rest_note"] = variations.REST_BETWEEN
 templates.env.globals["vzone"] = pass_context(lambda ctx, z: variations.zone_text(z, ctx.get("hrmax"), ctx.get("lang", "en")))
 templates.env.globals["vfill"] = pass_context(lambda ctx, st: variations.fill(
@@ -84,6 +85,9 @@ def parse_body(form, old: dict) -> dict:
     out = {}
     if form.get("sex") in ("M", "F"):
         out["sex"] = form.get("sex")
+    for key in ("activity_weekday", "activity_weekend"):
+        if form.get(key) in nutrition.ACTIVITY:
+            out[key] = form.get(key)
     if form.get("rice") in ("daily", "weekend", "none"):
         out["rice"] = form.get("rice")
     raw_budget = (form.get("budget") or "").replace(".", "").replace(",", "").strip()

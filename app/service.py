@@ -63,9 +63,12 @@ def nutrition(uid: int, saved: dict, day: dict) -> dict | None:
         return None
     days_to_race = (date.fromisoformat(saved["params"]["event_date"]) - date.fromisoformat(day["date"])).days
     sess = day.get("sessions") or []
-    t = N.targets(p["weight_kg"], p["height_cm"], p["age"], p["sex"], sess, plan_paces(saved)["easy"], days_to_race)
-    idx = date.fromisoformat(day["date"]).toordinal()
     weekend = date.fromisoformat(day["date"]).weekday() >= 5
+    level = p.get("activity_weekend" if weekend else "activity_weekday")
+    activity = N.ACTIVITY[level][0] if level in N.ACTIVITY else N.DEFAULT_ACTIVITY
+    t = N.targets(p["weight_kg"], p["height_cm"], p["age"], p["sex"], sess, plan_paces(saved)["easy"], days_to_race,
+                  activity)
+    idx = date.fromisoformat(day["date"]).toordinal()
     menu = N.day_meals(idx, sess, t, p.get("rice") or "daily", weekend, p.get("budget"))
     return {"target": t, "menu": menu, "tip": N.TIPS[idx % len(N.TIPS)]}
 

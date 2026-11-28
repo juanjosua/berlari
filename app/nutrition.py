@@ -75,10 +75,20 @@ def exercise_kcal(sessions: list[dict], kg: float, easy_pace_s: float) -> float:
     return total
 
 
+# Everyday-life energy as a multiple of resting energy (outside training).
+ACTIVITY = {"sitting": (1.2, ("Mostly sitting", "Kebanyakan duduk"),
+                        ("desk or gaming, drive everywhere, little walking", "kerja meja atau main game, ke mana-mana naik kendaraan, jarang jalan")),
+            "light": (1.35, ("Light", "Ringan"),
+                      ("desk job plus 30–60 min of walking a day", "kerja meja plus jalan kaki 30–60 menit sehari")),
+            "active": (1.5, ("Active", "Aktif"), ("on your feet a lot", "banyak berdiri dan bergerak")),
+            "very": (1.7, ("Very active", "Sangat aktif"), ("physical work most of the day", "kerja fisik hampir sepanjang hari"))}
+DEFAULT_ACTIVITY = 1.3
+
+
 def targets(kg: float, cm: float, age: int, sex: str, sessions: list[dict], easy_pace_s: float,
-            days_to_race: int) -> dict:
+            days_to_race: int, activity: float = DEFAULT_ACTIVITY) -> dict:
     """Calories, protein and carbs for one day.
-    - Energy: resting x 1.3 (daily life) + planned training - a deficit for gradual weight loss.
+    - Energy: resting x activity (daily life, 1.2-1.7; 1.3 if unknown) + planned training - a deficit.
     - Deficit ~500 kcal on easy/rest days (about 0.5 kg a week), smaller on long or hard days so training is
       fuelled, none in race week. Never below resting energy.
     - Protein 1.5 g per kg of a healthy reference weight (BMI 25) to keep muscle while losing fat.
@@ -86,7 +96,7 @@ def targets(kg: float, cm: float, age: int, sex: str, sessions: list[dict], easy
     bmi = kg / (cm / 100) ** 2
     ref_kg = min(kg, 25 * (cm / 100) ** 2)
     rest = bmr(kg, cm, age, sex)
-    burn = rest * 1.3 + exercise_kcal(sessions, kg, easy_pace_s)
+    burn = rest * activity + exercise_kcal(sessions, kg, easy_pace_s)
     types = {s["type"] for s in sessions}
     heavy = bool(types & {"LONG", "INT", "TEMPO", "RACE"})
     # BMI 30+: a bigger (still standard 500-1000 kcal) gap; the floor below keeps it at or above resting needs
