@@ -223,3 +223,10 @@ header { position: relative; z-index: 10; }
 @media (prefers-color-scheme: dark) { .btn.ghost { color: var(--orange); } }
 .soon .btn.ghost { display: block; text-align: center; margin-top: 8px; }
 .weeknav { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0; }
+/* Body fields + safety note */
+.body-fields { border: 1px solid var(--line); border-radius: 10px; padding: 10px 12px; margin: 0 0 14px; }
+.body-fields legend { font-weight: 700; padding: 0 4px; }
+.row3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.row3 label { margin-bottom: 6px; font-size: .85rem; }
+.safety { margin-top: 12px; border-left: 4px solid #d98a00; }
+.safety p { margin: 6px 0 0; font-size: .92rem; }

@@ -22,6 +22,7 @@
   <label>{{ t("Goal time in minutes") }} <span class="muted">{{ t("(optional, e.g. 55, or 119 for 1:59)") }}</span>
     <input type="number" name="goal_minutes" inputmode="numeric" min="10" max="600" step="1" placeholder="119">
   </label>
+  {% include "_body.html" %}
   <button class="btn" type="submit">{{ t("Build my plan") }}</button>
   <p class="muted small">{{ t("Reads your last 12 weeks of Strava runs. Takes a few seconds.") }}</p>
 </form>

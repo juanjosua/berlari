@@ -125,3 +125,23 @@ def test_beginner_half_peaks_lower_with_last_long_run_three_weeks_out():
     race_week = [d for d in days if (race - date.fromisoformat(d.date)).days < 7]
     assert sum(d.km for d in race_week if d.kind != "race") < 12  # light race week
     assert any(x["type"] == "TEMPO" for d in days if d.phase in ("build2", "peak") for x in d.sessions)
+
+
+def test_higher_bmi_builds_slower_peaks_lower_and_keeps_run_walk_longer():
+    from datetime import timedelta
+    from app.plan import body_tier
+    assert [body_tier(b) for b in (None, 24.0, 31.0, 35.3)] == [0, 0, 1, 2]
+
+    def summary(bmi):
+        days = build_plan(Stats(7, 4.6, 565), "half", date(2027, 5, 30), 4, 3 * 3600, today=date(2026, 11, 28), bmi=bmi)
+        weeks = {}
+        for d in days:
+            k = date.fromisoformat(d.date) - timedelta(days=date.fromisoformat(d.date).weekday())
+            weeks[k] = weeks.get(k, 0) + d.km
+        longs = [x["km"] for d in days for x in d.sessions if x["type"] == "LONG"]
+        build2_vars = {x.get("var") for d in days if d.phase == "build2" for x in d.sessions if x["type"] in ("EASY", "LONG")}
+        return max(weeks.values()), max(longs), build2_vars
+    normal, heavy = summary(None), summary(35.3)
+    assert heavy[0] < normal[0] * 0.85  # lower peak week
+    assert 14 <= heavy[1] <= normal[1]  # long run still reaches ~15 km
+    assert heavy[2] <= {"runwalk", "walk_breaks"} and not normal[2] <= {"runwalk", "walk_breaks"}

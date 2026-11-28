@@ -58,15 +58,15 @@ def paces(stats: Stats, distance: str, goal_s: int | None) -> dict:
     return {"easy": race + e, "tempo": race + t, "interval": race + i, "race": race}
 
 
-def weekly_targets(start_km: float, peak_km: float, weeks: int, taper: int) -> list[float]:
-    """Volume per week: +10%/wk with every 4th week a cutback, then taper."""
+def weekly_targets(start_km: float, peak_km: float, weeks: int, taper: int, growth: float = 1.10) -> list[float]:
+    """Volume per week: +10%/wk (or `growth`) with every 4th week a cutback, then taper."""
     build_weeks = max(weeks - taper, 0)
     vols, v = [], start_km
     for i in range(build_weeks):
         if (i + 1) % 4 == 0 and i != build_weeks - 1:  # the week before the taper holds the biggest long run
             vols.append(round(v * 0.8, 1))  # cutback, don't advance v
         else:
-            v = min(v * 1.10, peak_km) if i else v
+            v = min(v * growth, peak_km) if i else v
             vols.append(round(v, 1))
     last = max(vols) if vols else start_km  # taper from peak, not from a cutback week
     for t in range(min(taper, weeks)):
@@ -74,10 +74,23 @@ def weekly_targets(start_km: float, peak_km: float, weeks: int, taper: int) -> l
     return vols
 
 
+def body_tier(bmi: float | None) -> int:
+    """0 = BMI under 30, 1 = 30-35, 2 = 35+. Heavier runners load joints more on every stride, so the plan
+    builds more slowly, peaks lower and keeps run-walk longer."""
+    return 2 if bmi and bmi >= 35 else 1 if bmi and bmi >= 30 else 0
+
+
+# per body tier: (peak volume factor, weekly growth, long-run growth km/week, phases that recommend run-walk)
+BODY = {0: (1.0, 1.10, 1.5, {"base"}), 1: (0.85, 1.08, 1.2, {"base", "build1"}),
+        2: (0.8, 1.07, 1.0, {"base", "build1", "build2"})}
+
+
 def build_plan(stats: Stats, distance: str, event: date, runs_per_week: int,
-               goal_s: int | None = None, today: date | None = None, prefs: dict | None = None) -> list[Day]:
+               goal_s: int | None = None, today: date | None = None, prefs: dict | None = None,
+               bmi: float | None = None) -> list[Day]:
     """prefs: the athlete's own default variation per family, e.g. {"INT": "n4x4", "EASY": "runwalk"};
-    it replaces the variation the plan would otherwise recommend for that phase."""
+    it replaces the variation the plan would otherwise recommend for that phase.
+    bmi: body-mass index if known; 30+ makes the plan gentler (see BODY)."""
     today = today or date.today()
     if distance not in DISTANCES_KM:
         raise ValueError("unknown distance")
@@ -91,8 +104,10 @@ def build_plan(stats: Stats, distance: str, event: date, runs_per_week: int,
     start_km = max(stats.weekly_km, 10.0)
     # Beginners (low volume or slow easy pace) start with run-walk and Norwegian 4x4, and peak lower.
     beginner = stats.weekly_km < 12 or stats.easy_pace_s > 450
-    peak = max((BEGINNER_PEAK_KM if beginner else PEAK_KM)[distance], start_km)
-    vols = weekly_targets(start_km, peak, weeks, TAPER_WEEKS[distance])
+    tier = body_tier(bmi)
+    peak_factor, growth, long_step, run_walk_phases = BODY[tier]
+    peak = max((BEGINNER_PEAK_KM if beginner else PEAK_KM)[distance] * peak_factor, start_km)
+    vols = weekly_targets(start_km, peak, weeks, TAPER_WEEKS[distance], growth)
     p = paces(stats, distance, goal_s)
     run_days = RUN_DAYS[runs_per_week]
     long_cap = LONG_CAP_KM[distance]
@@ -116,9 +131,11 @@ def build_plan(stats: Stats, distance: str, event: date, runs_per_week: int,
         # the long build block is split in two so there's a checkpoint roughly every 6-8 weeks
         tag = "build1" if phase == "build" and w < (base_end + peak_start) // 2 else "build2" if phase == "build" else phase
         wu = w % 3  # warm-up variation of the week
-        # Long run ~35% of the week (45% for beginners, whose weeks are smaller), grows <= 1.5 km/week from the
+        # Long run ~35% of the week (45% for beginners, whose weeks are smaller), grows <= long_step km/week from the
         # current longest, capped per distance.
-        long_km = round(min(vol * (0.45 if beginner else 0.35), longest + 1.5 * (w + 1), long_cap), 1)
+        # heavier runners: fewer weekly km, so the (walk-break) long run takes a bigger share to still reach ~15 km
+        share = 0.5 if tier and beginner else 0.45 if beginner else 0.35
+        long_km = round(min(vol * share, longest + long_step * (w + 1), long_cap), 1)
         quality_km = round(vol * 0.2, 1)
         n_easy = runs_per_week - 2
         easy_km = round(max((vol - long_km - quality_km) / n_easy, 3.0), 1) if n_easy else 0
@@ -127,7 +144,7 @@ def build_plan(stats: Stats, distance: str, event: date, runs_per_week: int,
         quality = ("TEMPO" if phase == "taper" else
                    ["INT", "TEMPO"][w % 2] if beginner and tag in ("build2", "peak") else
                    "INT" if beginner else ["INT", "TEMPO", "INT"][w % 3])
-        run_walk = beginner and phase == "base"
+        run_walk = (beginner or tier > 0) and tag in run_walk_phases
         rounds = {"base": 2, "build": 3, "peak": 2, "taper": 1}[phase]
         for dow in range(7):
             d = start + timedelta(days=w * 7 + dow)

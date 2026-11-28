@@ -53,6 +53,13 @@ def prefs(uid: int) -> dict:
     return json.loads(raw) if raw else {}
 
 
+def bmi(uid: int) -> float | None:
+    p = prefs(uid)
+    if p.get("height_cm") and p.get("weight_kg"):
+        return round(p["weight_kg"] / (p["height_cm"] / 100) ** 2, 1)
+    return None
+
+
 def max_hr_info(uid: int) -> tuple[int | None, str | None]:
     """(max HR, source). Tanaka formula 208 - 0.7 x age when the athlete gave their age (Strava doesn't share
     it); otherwise the highest HR seen in their activities if it looks like a real maximum."""

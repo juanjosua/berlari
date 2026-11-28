@@ -4,9 +4,7 @@
 <h1>{{ t("Settings") }}</h1>
 {% if saved_ok %}<p class="notice" role="status">{{ t("Saved. Upcoming sessions now use your defaults.") }}</p>{% endif %}
 <form method="post" action="/settings" class="card">
-  <label>{{ t("Your age") }} <span class="muted">{{ t("(Strava doesn't share it)") }}</span>
-    <input type="number" name="age" inputmode="numeric" min="10" max="100" value="{{ prefs.age or '' }}">
-  </label>
+  {% include "_body.html" %}
   <p class="small muted">{% if hr_src == "tanaka" %}{{ t("Max heart rate") }}: <b>{{ hrmax }} bpm</b> (Tanaka: 208 − 0.7 × {{ prefs.age }}).
     {% elif hrmax %}{{ t("Max heart rate") }}: <b>{{ hrmax }} bpm</b> ({{ t("highest seen in your runs; add your age in Settings to use the Tanaka formula.") }})
     {% else %}{{ t("Add your age in Settings to see heart-rate ranges in bpm.") }}{% endif %}</p>

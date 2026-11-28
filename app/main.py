@@ -76,6 +76,19 @@ def current_user(request: Request) -> dict | None:
     return db.get_user(uid) if uid else None
 
 
+def parse_body(form, old: dict) -> dict:
+    """Age, height (cm) and weight (kg) from a form; out-of-range or blank values clear the field."""
+    out = {}
+    for key, lo, hi in (("age", 10, 100), ("height_cm", 120, 230), ("weight_kg", 30, 250)):
+        raw = (form.get(key) or "").strip().replace(",", ".")
+        try:
+            val = float(raw)
+            out[key] = (int(val) if key == "age" else round(val, 1)) if lo <= val <= hi else None
+        except ValueError:
+            out[key] = None if raw == "" else old.get(key)
+    return out
+
+
 def parse_goal(minutes: str) -> int | None:
     """Goal time typed as whole minutes (phones show a number pad; no colon needed). Blank -> None."""
     minutes = minutes.strip()
@@ -198,24 +211,27 @@ def new_plan_form(request: Request):
     if not user:
         return RedirectResponse("/")
     return templates.TemplateResponse(request, "new.html", {
-        "user": user, "distances": DISTANCES_KM, "saved": db.get_plan(user["id"])})
+        "user": user, "distances": DISTANCES_KM, "saved": db.get_plan(user["id"]), "prefs": service.prefs(user["id"])})
 
 
 @app.post("/new")
-def create_plan(request: Request, background: BackgroundTasks, event_date: str = Form(...),
-                distance: str = Form(...), runs_per_week: int = Form(4), goal_minutes: str = Form("")):
+async def create_plan(request: Request, background: BackgroundTasks, event_date: str = Form(...),
+                      distance: str = Form(...), runs_per_week: int = Form(4), goal_minutes: str = Form("")):
     user = current_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
+    old = service.prefs(user["id"])
+    db.set_prefs(user["id"], old | parse_body(await request.form(), old))  # age/height/weight shape the plan
     try:
         goal_s = parse_goal(goal_minutes)
         runs = strava.recent_runs(user)
         stats = strava.stats_from_runs(runs)
         days = build_plan(stats, distance, date.fromisoformat(event_date), runs_per_week, goal_s,
-                          prefs=service.prefs(user["id"]).get("var"))
+                          prefs=service.prefs(user["id"]).get("var"), bmi=service.bmi(user["id"]))
     except ValueError as e:
         return templates.TemplateResponse(request, "new.html", {
-            "user": user, "distances": DISTANCES_KM, "error": str(e)}, status_code=400)
+            "user": user, "distances": DISTANCES_KM, "error": str(e), "prefs": service.prefs(user["id"])},
+            status_code=400)
     params = {"event_date": event_date, "distance": distance,
               "runs_per_week": runs_per_week,
               "goal_time": f"{goal_s // 3600}:{goal_s // 60 % 60:02d}" if goal_s else ""}
@@ -267,6 +283,7 @@ def show_plan(request: Request, background: BackgroundTasks):
         "summary": db.get_summary(user["id"]), "m": service.current_metrics(user["id"], saved),
         "chart": service.chart(user["id"], saved), "recent": service.recent_runs(user["id"]),
         "phase_now": phase_now, "phase_results": [d["checkpoint_result"] for d in all_days if d.get("checkpoint_result")],
+        "bmi": service.bmi(user["id"]),
         "days_left": (date.fromisoformat(saved["params"]["event_date"]) - t).days})
 
 
@@ -316,8 +333,7 @@ async def settings_save(request: Request):
     if not user:
         return RedirectResponse("/", status_code=303)
     form = await request.form()
-    age = (form.get("age") or "").strip()
-    new = {"age": int(age) if age.isdigit() and 10 <= int(age) <= 100 else None, "var": {}}
+    new = parse_body(form, service.prefs(user["id"])) | {"var": {}}
     for fam, _ in FAMILIES:
         valid = {v["id"] for v in (variations.STRENGTH if fam == "SBW" else variations.V[fam])}
         if form.get(f"var_{fam}") in valid:

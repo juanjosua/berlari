@@ -1,0 +1,9 @@
+<fieldset class="body-fields">
+  <legend>{{ t("About you") }} <span class="muted">{{ t("(helps make the plan safe for you)") }}</span></legend>
+  <div class="row3">
+    <label>{{ t("Age") }}<input type="number" name="age" inputmode="numeric" min="10" max="100" value="{{ prefs.age or '' }}"></label>
+    <label>{{ t("Height (cm)") }}<input type="number" name="height_cm" inputmode="decimal" min="120" max="230" step="0.1" value="{{ prefs.height_cm or '' }}"></label>
+    <label>{{ t("Weight (kg)") }}<input type="number" name="weight_kg" inputmode="decimal" min="30" max="250" step="0.1" value="{{ prefs.weight_kg or '' }}"></label>
+  </div>
+  <p class="small muted">{{ t("Age sets your max heart rate (Tanaka formula; Strava doesn't share age). Height and weight let the plan build up more gently when needed. Only stored for your plan, never shared.") }}</p>
+</fieldset>

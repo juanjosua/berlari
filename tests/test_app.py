@@ -189,3 +189,26 @@ def test_settings_age_gives_tanaka_max_hr_and_defaults_apply(monkeypatch):
     assert "187 bpm" in page and "Tanaka" in page and "Checkpoint" in page
     assert "Settings" in c.get("/settings").text
     db.delete_user(901)
+
+
+def test_new_plan_form_saves_age_height_weight_and_shows_safety_note(monkeypatch):
+    from app import service
+    db.init()
+    monkeypatch.setattr(strava, "exchange_code", lambda code: (
+        db.save_user(911, "Body Runner", "a", "r", int(time.time()) + 3600), {"athlete": {"id": 911}})[1])
+    monkeypatch.setattr(strava, "recent_runs", lambda u: [])
+    c = TestClient(main.app, follow_redirects=False)
+    state = c.get("/auth/login").headers["location"].split("state=")[1]
+    c.get("/auth/callback", params={"code": "x", "state": state})
+    assert 'name="height_cm"' in c.get("/new").text
+    c.post("/new", data={"event_date": (date.today() + timedelta(weeks=20)).isoformat(), "distance": "half",
+                         "age": "30", "height_cm": "170", "weight_kg": "102,0"})
+    assert service.bmi(911) == 35.3 and service.max_hr_info(911) == (187, "tanaka")
+    page = c.get("/plan").text
+    assert "BMI 35.3" in page and "doctor" in page
+    c.post("/settings", data={"age": "30", "height_cm": "170", "weight_kg": "80"})
+    assert service.bmi(911) == 27.7 and "BMI" not in c.get("/plan").text
+    c.post("/settings", data={"age": "abc", "height_cm": "", "weight_kg": "999"})  # junk is rejected
+    p = service.prefs(911)
+    assert p["age"] == 30 and p["height_cm"] is None and p["weight_kg"] is None
+    db.delete_user(911)

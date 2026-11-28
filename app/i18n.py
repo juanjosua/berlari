@@ -67,6 +67,22 @@ ID = {
     "Today and tomorrow": "Hari ini dan besok", "Nothing planned.": "Tidak ada jadwal.",
     "Full schedule": "Jadwal lengkap", "Previous": "Sebelumnya", "Next": "Berikutnya", "Week": "Minggu ke",
     "Weeks": "Minggu",
+    "About you": "Tentang kamu", "(helps make the plan safe for you)": "(membantu membuat program aman untukmu)",
+    "Age": "Umur", "Height (cm)": "Tinggi (cm)", "Weight (kg)": "Berat (kg)",
+    "Age sets your max heart rate (Tanaka formula; Strava doesn't share age). Height and weight let the plan build up more gently when needed. Only stored for your plan, never shared.":
+        "Umur menentukan HR maksimalmu (rumus Tanaka; Strava tidak membagikan umur). Tinggi dan berat membuat "
+        "program naik lebih perlahan bila perlu. Hanya disimpan untuk programmu, tidak pernah dibagikan.",
+    "Plan adjusted for you": "Program disesuaikan untukmu",
+    "Because running loads your joints with 2–3× your body weight on every stride, this plan builds up more slowly, peaks lower and keeps run-walk longer.":
+        "Karena setiap langkah lari membebani sendi 2–3× berat badan, program ini naik lebih perlahan, puncaknya "
+        "lebih rendah, dan memakai lari-jalan lebih lama.",
+    "Please get a check-up from a doctor before the hard sessions (Norwegian 4x4, tempo), especially with high blood pressure, heart, diabetes or joint problems.":
+        "Sebaiknya periksa ke dokter sebelum sesi berat (Norwegian 4x4, tempo), terutama bila punya tekanan darah "
+        "tinggi, masalah jantung, diabetes atau sendi.",
+    "Stop and rest": "Berhenti dan istirahat",
+    "if you feel chest pain or pressure, dizziness, unusual shortness of breath, or sharp pain in a joint, shin or heel.":
+        "bila merasa nyeri atau sesak di dada, pusing, napas pendek tidak biasa, atau nyeri tajam di sendi, tulang "
+        "kering atau tumit.",
     "Week of": "Minggu", "Adjusted": "Disesuaikan", "Ran": "Lari", "in": "dalam", "min": "mnt",
     "Easy": "Santai", "Long": "Lari jauh", "Intervals": "Interval", "Tempo": "Tempo", "Rest": "Istirahat",
     "Race": "Lomba",

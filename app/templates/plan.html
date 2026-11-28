@@ -10,6 +10,14 @@
     {{ t("typical pace") }} {{ s.easy_pace_s | pace }}</p>
 </section>
 
+{% if bmi and bmi >= 30 %}
+<section class="card safety" role="note">
+  <span class="eyebrow">{{ t("Plan adjusted for you") }} · BMI {{ bmi }}</span>
+  <p>{{ t("Because running loads your joints with 2–3× your body weight on every stride, this plan builds up more slowly, peaks lower and keeps run-walk longer.") }}
+  {% if bmi >= 35 %}{{ t("Please get a check-up from a doctor before the hard sessions (Norwegian 4x4, tempo), especially with high blood pressure, heart, diabetes or joint problems.") }}{% endif %}</p>
+  <p class="small"><b>{{ t("Stop and rest") }}</b> {{ t("if you feel chest pain or pressure, dizziness, unusual shortness of breath, or sharp pain in a joint, shin or heel.") }}</p>
+</section>
+{% endif %}
 {% if phases %}
 <section class="card phase-card">
   {% set li = 1 if lang == "id" else 0 %}
