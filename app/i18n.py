@@ -62,6 +62,8 @@ ID = {
         "Dipakai untuk setiap sesi mendatang jenis itu, kecuali kamu memilih yang lain di harinya.",
     "Recommended by the plan (changes by phase)": "Rekomendasi program (berubah per fase)",
     "Saved. Upcoming sessions now use your defaults.": "Tersimpan. Sesi mendatang kini memakai pilihan bawaanmu.",
+    "Saved. Your plan is being rebuilt from today for your new height/weight; past days stay as they were.":
+        "Tersimpan. Programmu sedang disusun ulang mulai hari ini sesuai tinggi/berat barumu; hari-hari yang lalu tetap seperti semula.",
     "Easy runs": "Lari santai", "Long runs": "Lari jauh", "Tempo runs": "Lari tempo",
     "Strength (bodyweight)": "Strength (tanpa alat)",
     "Today and tomorrow": "Hari ini dan besok", "Nothing planned.": "Tidak ada jadwal.",

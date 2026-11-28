@@ -212,3 +212,37 @@ def test_new_plan_form_saves_age_height_weight_and_shows_safety_note(monkeypatch
     p = service.prefs(911)
     assert p["age"] == 30 and p["height_cm"] is None and p["weight_kg"] is None
     db.delete_user(911)
+
+
+def test_weight_change_in_settings_rebuilds_plan_keeping_past_and_picks(monkeypatch):
+    from app import service
+    db.init()
+    monkeypatch.setattr(strava, "exchange_code", lambda code: (
+        db.save_user(921, "Weight Runner", "a", "r", int(time.time()) + 3600), {"athlete": {"id": 921}})[1])
+    monkeypatch.setattr(strava, "recent_runs", lambda u: [])
+    c = TestClient(main.app, follow_redirects=False)
+    state = c.get("/auth/login").headers["location"].split("state=")[1]
+    c.get("/auth/callback", params={"code": "x", "state": state})
+    c.post("/new", data={"event_date": (date.today() + timedelta(weeks=20)).isoformat(), "distance": "half",
+                         "goal_minutes": "180", "age": "30", "height_cm": "170", "weight_kg": "102"})
+    plan = db.get_plan(921)
+    # a past day with a review, and an upcoming long run picked by hand
+    past = {"date": (date.today() - timedelta(days=3)).isoformat(), "kind": "easy", "km": 3, "detail": "x",
+            "sessions": [{"type": "EASY", "km": 3}], "review": "Nice run"}
+    up = next(d for d in plan["days"] if d["date"] > date.today().isoformat() and
+              any(x["type"] == "LONG" for x in d["sessions"]))
+    i = next(k for k, x in enumerate(up["sessions"]) if x["type"] == "LONG")
+    up["sessions"][i] |= {"var": "fast_finish", "var_set": True}
+    db.save_plan(921, plan["params"], plan["stats"], [past] + plan["days"])
+    heavy_peak = max(x.get("km") or 0 for d in plan["days"] for x in d["sessions"] if x["type"] == "LONG")
+
+    r = c.post("/settings", data={"age": "30", "height_cm": "170", "weight_kg": "80"})
+    assert r.headers["location"] == "/settings?saved=rebuilt"
+    new = db.get_plan(921)
+    assert new["days"][0] == past  # history untouched
+    kept = next(d for d in new["days"] if d["date"] == up["date"])
+    assert any(x.get("var") == "fast_finish" and x.get("var_set") for x in kept["sessions"])
+    light_peak = max(x.get("km") or 0 for d in new["days"] for x in d["sessions"] if x["type"] == "LONG")
+    assert light_peak > heavy_peak and service.bmi(921) == 27.7  # BMI under 30: normal build-up
+    assert c.post("/settings", data={"age": "31", "height_cm": "170", "weight_kg": "80"}).headers["location"] == "/settings?saved=1"
+    db.delete_user(921)

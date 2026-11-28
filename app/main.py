@@ -328,18 +328,30 @@ def settings_page(request: Request):
 
 
 @app.post("/settings")
-async def settings_save(request: Request):
+async def settings_save(request: Request, background: BackgroundTasks):
     user = current_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
     form = await request.form()
-    new = parse_body(form, service.prefs(user["id"])) | {"var": {}}
+    old = service.prefs(user["id"])
+    new = parse_body(form, old) | {"var": {}}
     for fam, _ in FAMILIES:
         valid = {v["id"] for v in (variations.STRENGTH if fam == "SBW" else variations.V[fam])}
         if form.get(f"var_{fam}") in valid:
             new["var"][fam] = form.get(f"var_{fam}")
     service.save_prefs(user["id"], new)
+    body_changed = (old.get("height_cm"), old.get("weight_kg")) != (new["height_cm"], new["weight_kg"])
+    if body_changed and db.get_plan(user["id"]):
+        # new weight/height changes how gently the plan should build: rebuild it from today
+        background.add_task(rebuild_and_note, user["id"])
+        return RedirectResponse("/settings?saved=rebuilt", status_code=303)
     return RedirectResponse("/settings?saved=1", status_code=303)
+
+
+def rebuild_and_note(uid: int) -> None:
+    if service.rebuild_plan(uid):
+        service.refresh_summary(uid, force=True)
+        service.ensure_notes(uid)
 
 
 @app.post("/plan/variation")

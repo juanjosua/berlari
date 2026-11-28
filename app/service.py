@@ -7,7 +7,8 @@ from functools import wraps
 
 from . import coach, db, fitness, strava
 from . import sessions as S
-from .plan import (PHASES, Stats, adapt, adjust_after_failed_phase, evaluate_phase, paces,  # noqa: F401
+from .plan import (PHASES, Stats, adapt, adjust_after_failed_phase, build_plan, evaluate_phase, paces,  # noqa: F401
+                   plan_to_dicts,
                    plan_phases)
 
 log = logging.getLogger("berlari")
@@ -72,6 +73,41 @@ def max_hr_info(uid: int) -> tuple[int | None, str | None]:
 
 def max_hr(uid: int) -> float:
     return max_hr_info(uid)[0] or 190  # checks need a number; 190 only when nothing is known
+
+
+def rebuild_plan(uid: int) -> bool:
+    """Regenerate the plan from today with the current profile (age, height, weight, default variations) and
+    fresh Strava stats, for the same race. Past days stay as they were (with their checks, reviews and
+    checkpoint results); variations picked by hand and run reviews on upcoming days are carried over."""
+    saved, user = db.get_plan(uid), db.get_user(uid)
+    if not saved or not user or saved["params"].get("source") == "custom":
+        return False
+    p, t = saved["params"], today().isoformat()
+    if p["event_date"] <= t:
+        return False
+    try:
+        runs = strava.recent_runs(user)
+        seed_activities(uid, runs)
+        stats = strava.stats_from_runs(runs)
+    except Exception:  # Strava down: rebuild from the stats we already have
+        log.exception("rebuild: Strava fetch failed for %s", uid)
+        stats = Stats(**saved["stats"])
+    g = (p.get("goal_time") or "").split(":")
+    goal_s = int(g[0]) * 3600 + int(g[1]) * 60 if len(g) == 2 and all(x.isdigit() for x in g) else None
+    new_days = plan_to_dicts(build_plan(stats, p["distance"], date.fromisoformat(p["event_date"]),
+                                        p.get("runs_per_week") or 4, goal_s, prefs=prefs(uid).get("var"), bmi=bmi(uid)))
+    old = {d["date"]: d for d in saved["days"]}
+    for d in new_days:
+        prev = old.get(d["date"]) or {}
+        if prev.get("review"):
+            d["review"] = prev["review"]
+        picked = {x["type"]: x["var"] for x in prev.get("sessions") or [] if x.get("var_set")}
+        for x in d["sessions"]:
+            if x["type"] in picked:
+                x["var"], x["var_set"] = picked[x["type"]], True
+    past = [d for d in saved["days"] if d["date"] < t]
+    db.save_plan(uid, p, stats.__dict__, past + [d for d in new_days if d["date"] >= t])
+    return True
 
 
 def save_prefs(uid: int, new: dict) -> None:
