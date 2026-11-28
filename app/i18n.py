@@ -100,6 +100,10 @@ ID = {
     "Only on weekends (at home)": "Hanya akhir pekan (di rumah)", "Never": "Tidak pernah", "for the day": "untuk hari ini",
     "Prices are rough Jakarta-area estimates; stalls and promos vary. Home meals are priced as if bought at a stall.":
         "Harga adalah perkiraan kasar area Jakarta; tiap warung dan promo berbeda. Makanan rumah dihitung seperti beli di warung.",
+    "Food budget per weekday (Rp)": "Budget makan per hari kerja (Rp)", "(optional)": "(opsional)",
+    "Your budget covers about": "Budgetmu cukup untuk sekitar",
+    "under today's target. Fine for weight loss on easy days; on hard days add a banana or a Fitbar if you feel drained.":
+        "di bawah target hari ini. Tidak masalah untuk turun berat di hari ringan; di hari berat tambah pisang atau Fitbar bila terasa lemas.",
     "Week of": "Minggu", "Adjusted": "Disesuaikan", "Ran": "Lari", "in": "dalam", "min": "mnt",
     "Easy": "Santai", "Long": "Lari jauh", "Intervals": "Interval", "Tempo": "Tempo", "Rest": "Istirahat",
     "Race": "Lomba",

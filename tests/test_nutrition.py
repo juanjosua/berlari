@@ -14,7 +14,8 @@ def test_targets_give_gentle_deficit_and_fuel_hard_days():
     assert race_week["deficit"] == 0
     mid = targets(85, 170, 30, "M", [{"type": "REST"}], EASY, 100)  # BMI 29.4: standard 500 gap
     assert mid["deficit"] == 500
-    assert rest["kcal"] >= bmr(102, 170, 30, "M")  # never below resting needs
+    assert rest["kcal"] >= 1500  # BMI 30+: never below the usual weight-loss intake for men (NIH 1,500-1,800)
+    assert targets(80, 180, 30, "M", [{"type": "REST"}], EASY, 100)["kcal"] >= bmr(80, 180, 30, "M")  # BMI < 30: resting floor
     assert rest["protein"] == round(1.5 * 25 * 1.7 ** 2)  # protein from a healthy reference weight
     lean = targets(65, 175, 30, "M", [{"type": "REST"}], EASY, 100)
     assert lean["deficit"] == 0  # BMI under 25: eat to fuel training, no deficit
@@ -44,4 +45,16 @@ def test_rice_preference_weekend_home_meals_and_price():
     assert set(weekend["meals"]) == {"home_1", "home_2"} and flat(weekend).count("rice") >= 2
     assert all(m.count("rice") <= 2 and m.count("egg") <= 1 for m in weekend["meals"].values())
     assert weekday["price"] == sum(FOODS[f][5] for f in flat(weekday)) and 30000 < weekday["price"] < 100000
+    assert all("home" not in FOODS[f][4][0] for f in FOODS)  # nothing to cook: warteg or minimarket only
     assert "rice" in flat(day_meals(5, [{"type": "SBW"}], t))  # default: rice every day
+
+
+def test_weekday_budget_caps_price_and_flags_shortfall():
+    t = targets(102, 170, 30, "M", [{"type": "EASY", "km": 3}], EASY, 100)
+    tight = day_meals(5, [{"type": "EASY", "km": 3}], t, rice="weekend", weekend=False, budget=40000)
+    assert tight["price"] <= 40000 and tight["budget_limited"] and tight["kcal"] < t["kcal"]
+    roomy = day_meals(5, [{"type": "EASY", "km": 3}], t, rice="weekend", weekend=False, budget=200000)
+    assert not roomy["budget_limited"] and abs(roomy["kcal"] - t["kcal"]) <= 150
+    home = day_meals(5, [{"type": "REST"}], targets(102, 170, 30, "M", [{"type": "REST"}], EASY, 100),
+                     rice="weekend", weekend=True, budget=40000)
+    assert not home["budget_limited"]  # weekend family meals aren't limited by the weekday budget

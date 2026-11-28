@@ -86,6 +86,8 @@ def parse_body(form, old: dict) -> dict:
         out["sex"] = form.get("sex")
     if form.get("rice") in ("daily", "weekend", "none"):
         out["rice"] = form.get("rice")
+    raw_budget = (form.get("budget") or "").replace(".", "").replace(",", "").strip()
+    out["budget"] = int(raw_budget) if raw_budget.isdigit() and 15000 <= int(raw_budget) <= 500000 else None
     for key, lo, hi in (("age", 10, 100), ("height_cm", 120, 230), ("weight_kg", 30, 250)):
         raw = (form.get(key) or "").strip().replace(",", ".")
         try:

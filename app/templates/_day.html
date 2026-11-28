@@ -55,6 +55,7 @@
           {% if f.menu.meals.get("during") %}<div class="meal"><b>{{ t("During the long run") }}</b><ul>{% for fid, n in grouped(f.menu.meals.during) %}<li>{{ food(fid)[0][li] }}</li>{% endfor %}</ul></div>{% endif %}
           <p class="small">≈ {{ "{:,}".format(f.menu.kcal) }} kcal · {{ f.menu.protein }} g {{ t("protein") }} ·
             <b>≈ Rp {{ "{:,}".format(f.menu.price).replace(",", ".") }}</b> {{ t("for the day") }}</p>
+          {% if f.menu.budget_limited %}<p class="small">⚠ {{ t("Your budget covers about") }} {{ "{:,}".format(f.menu.kcal) }} kcal, {{ "{:,}".format(f.target.kcal - f.menu.kcal) }} kcal {{ t("under today's target. Fine for weight loss on easy days; on hard days add a banana or a Fitbar if you feel drained.") }}</p>{% endif %}
           <p class="small muted">{{ t("Prices are rough Jakarta-area estimates; stalls and promos vary. Home meals are priced as if bought at a stall.") }}</p>
           <p class="small tip">💡 {{ f.tip[li] }}</p>
           <p class="small muted">{{ t("Estimates for typical portions; check labels. General guidance, not a medical diet. With BMI 35+ or a health condition, check with a doctor or dietitian.") }}</p>
