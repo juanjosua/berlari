@@ -1,0 +1,2 @@
+{% macro act(r) %}{{ t({"Run": "Run", "TrailRun": "Run", "VirtualRun": "Run", "Walk": "Walk", "Hike": "Walk"}.get(r.type or "Run", "Strength")) }}
+  {% if r.km %}{{ "%g" | format(r.km) }} km · {% endif %}{{ "%g" | format(r.moving_min) }} {{ t("min") }}{% if r.km and r.pace %} · {{ r.pace }}{% endif %}{% if r.avg_hr %} · {{ r.avg_hr }} bpm{% endif %}{% endmacro %}

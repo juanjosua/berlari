@@ -36,6 +36,9 @@ tests/           pytest tests for plan.py
 deploy/          systemd unit + setup script for the VPS
 ```
 
+The plan page shows the overview cards plus today and tomorrow; the full plan is at `/plan/schedule`,
+one week per page.
+
 ## Run locally
 
 1. Create a Strava API app at <https://www.strava.com/settings/api>.
@@ -87,9 +90,9 @@ cap, km splits at tempo pace, hard efforts for intervals, and four 3-minute high
 (from the heart-rate stream). Strength counts when logged on Strava as Weight Training; strides and warm-ups
 can't be checked.
 
-Variations: interval, tempo, easy and long-run days each offer a menu the athlete can pick from on the plan
-page (e.g. classic reps, HIIT 30/30, sprints, pyramid, fartlek, Norwegian 4x4; steady tempo, cruise intervals,
-progressive; recovery, strides, progression, trail; fast-finish, race-pace blocks, surges, hilly). Only variations
+Variations (3 per type): interval, tempo, easy and long-run days each offer a menu the athlete can pick from on the plan
+page: Norwegian 4x4, 800 m repeats, fartlek; steady tempo, cruise intervals, progressive tempo; steady aerobic,
+run-walk, easy + strides; classic long run, walk breaks, fast finish. Only variations
 whose structure is visible in Strava data are offered: each run's speed and heart rate are kept as 5-second samples,
 and the check looks for the expected fast efforts, tempo blocks, pace build-up or heart-rate caps.
 

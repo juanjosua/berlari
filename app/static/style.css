@@ -218,3 +218,8 @@ header { position: relative; z-index: 10; }
 .moves summary { cursor: pointer; color: var(--fg); }
 .moves details span { display: block; margin: 4px 0 2px; color: var(--muted); }
 .phases { padding-left: 18px; margin: 6px 0 0; } .phases li { margin-bottom: 8px; }
+/* Today/tomorrow + weekly schedule pages */
+.btn.ghost { background: transparent; border: 1px solid var(--orange); color: var(--orange-dark); width: auto; padding: 10px 14px; }
+@media (prefers-color-scheme: dark) { .btn.ghost { color: var(--orange); } }
+.soon .btn.ghost { display: block; text-align: center; margin-top: 8px; }
+.weeknav { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0; }

@@ -1,0 +1,46 @@
+{% from "_macros.html" import act with context %}
+    <li class="day {{ d.kind }} {{ d.status or "" }} {% if d.date == today %}today{% endif %}" id="d-{{ d.date }}">
+      <div class="when">{{ ld(d.date, "%a %d") }}</div>
+      <div class="what">
+        {% if d.date in checkpoints %}<em class="badge checkpoint day-badge">⚑ {{ t("Checkpoint") }}</em>{% endif %}
+        {% if d.status %}<em class="badge {{ d.status }} day-badge">{{ t({"done": "Done", "partial": "Partly done", "extra": "Extra run", "missed": "Missed"}[d.status]) }}</em>{% endif %}
+        {% for s in d.sessions %}{% set c = d.checks[loop.index0] %}
+        <div class="sess t-{{ s.type | lower }}">
+          <strong>{{ slabel(s) }}{% if s.km and s.type not in ("N4X4", "RW") %} · {{ "%g" | format(s.km) }} km{% elif s.minutes %} · {{ s.minutes }} {{ t("min") }}{% endif %}</strong>
+          {% if s.type != "REST" or s.note %}<span>{{ stext(s) }}</span>{% endif %}
+          {% set cur = svar(s) %}{% set li = 1 if lang == "id" else 0 %}
+          {% if cur and s.type == "SBW" %}
+          <div class="var">
+            <span class="var-name">{{ t("Routine") }}: <b>{{ cur.label[li] }}</b></span>
+            <span>{{ cur.what[li] }}</span>
+            <ul class="moves">{% for mid in cur.moves %}{% set e = exercise(mid) %}
+              <li><details><summary><b>{{ e[0][li] }}</b> · {{ e[1][li] }}</summary><span>{{ e[2][li] }}</span></details></li>
+            {% endfor %}</ul>
+            <span class="small">{{ rest_note[li] }}</span>
+            {% if d.date >= today %}{% set vlist = svars(s) %}{% include "_varpick.html" %}{% endif %}
+          </div>
+          {% elif cur %}
+          <div class="var">
+            <span class="var-name">{{ t("Variation") }}: <b>{{ cur.label[li] }}</b></span>
+            <span>{{ cur.what[li] }}</span>
+            {% if cur.zone %}<span class="hr">♥ {{ t("Heart rate") }}: {{ vzone(cur.zone) }}</span>{% endif %}
+            <details class="how"><summary>{{ t("How to do it") }}</summary>
+              <ol>{% for st in cur.how %}<li>{{ vfill(st) }}</li>{% endfor %}</ol>
+            </details>
+            {% if d.date >= today %}{% set vlist = svars(s) %}{% include "_varpick.html" %}{% endif %}
+          </div>
+          {% endif %}
+          {% if s.warmup is not none %}<span class="warm">{{ swarm(s) }}</span>{% endif %}
+          {% if c.state %}<span class="check {{ c.state }}">{{ c[lang] }}</span>{% endif %}
+        </div>
+        {% endfor %}
+        {% if d.adjusted %}<span class="adjusted">{{ t("Adjusted") }}: {{ pt(d.adjusted) }}</span>{% endif %}
+        {% if d.why %}<span class="why">{{ d.why }}</span>{% endif %}
+        {% for r in d.runs or [] %}
+        <span class="actual">{{ act(r) }}
+          {% if r.id %}· <a class="strava-link" href="https://www.strava.com/activities/{{ r.id }}" target="_blank" rel="noopener">View on Strava</a>{% endif %}</span>
+        {% endfor %}
+        {% if d.review %}<p class="review">{{ d.review }}</p>{% endif %}
+        {% if d.checkpoint_result %}<p class="result {{ 'passed' if d.checkpoint_result.passed else 'failed' }}">{{ pmsg(d.checkpoint_result) }}</p>{% endif %}
+      </div>
+    </li>

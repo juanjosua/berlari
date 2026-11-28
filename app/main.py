@@ -226,6 +226,24 @@ def create_plan(request: Request, background: BackgroundTasks, event_date: str =
     return RedirectResponse("/plan", status_code=303)
 
 
+def plan_context(request: Request, user: dict, saved: dict) -> dict:
+    """What every plan page needs to draw day cards: checked days, phases, heart-rate and pace info."""
+    t = service.today()
+    all_days = service.days_with_runs(user["id"], saved)
+    lang = request_lang(request)
+    li = lang == "id"
+    phases = [{**ph, "n": i + 1, "label": P.PHASES[ph["key"]]["label"][li], "goal": P.PHASES[ph["key"]]["goal"][li],
+               "checkpoint_text": P.checkpoint_text(ph, lang)} for i, ph in enumerate(P.plan_phases(all_days))]
+    hrmax, src = service.max_hr_info(user["id"])
+    age = service.prefs(user["id"]).get("age")
+    hr_note = (i18n.t("Max heart rate", lang) + f" {hrmax} bpm (Tanaka: 208 − 0.7 × {age})" if src == "tanaka" else
+               i18n.t("Max heart rate", lang) + f" {hrmax} bpm. " + i18n.t("highest seen in your runs; add your age in Settings to use the Tanaka formula.", lang)
+               if src == "observed" else i18n.t("Add your age in Settings to see heart-rate ranges in bpm.", lang))
+    return {"user": user, "plan": saved, "all_days": all_days, "today": t.isoformat(), "phases": phases,
+            "checkpoints": {x["checkpoint"] for x in phases if x["checkpoint"]}, "hrmax": hrmax, "hr_note": hr_note,
+            "paces": service.plan_paces(saved), "date": date}
+
+
 @app.get("/plan")
 def show_plan(request: Request, background: BackgroundTasks):
     user = current_user(request)
@@ -234,39 +252,46 @@ def show_plan(request: Request, background: BackgroundTasks):
     saved = db.get_plan(user["id"])
     if not saved:
         return RedirectResponse("/new")
-    t = service.today()
-    monday = (t - timedelta(days=t.weekday())).isoformat()
-    all_days = service.days_with_runs(user["id"], saved)
-    days = [d for d in all_days if d["date"] >= monday]
-    lang = request_lang(request)
-    li = lang == "id"
-    phases = [{**ph, "n": i + 1, "label": P.PHASES[ph["key"]]["label"][li], "goal": P.PHASES[ph["key"]]["goal"][li],
-               "checkpoint_text": P.checkpoint_text(ph, lang)} for i, ph in enumerate(P.plan_phases(all_days))]
+    ctx = plan_context(request, user, saved)
+    t, all_days, phases = service.today(), ctx["all_days"], ctx["phases"]
     phase_now = next((x for x in phases if x["start"] <= t.isoformat() <= x["end"]), phases[0] if phases else None)
     if phase_now:
         so_far = P.evaluate_phase({**phase_now, "end": (t - timedelta(days=1)).isoformat()}, all_days)
         phase_now["progress"] = so_far["ratio"] if so_far["sessions"] else None
-    hrmax, src = service.max_hr_info(user["id"])
-    age = service.prefs(user["id"]).get("age")
-    hr_note = (i18n.t("Max heart rate", lang) + f" {hrmax} bpm (Tanaka: 208 − 0.7 × {age})" if src == "tanaka" else
-               i18n.t("Max heart rate", lang) + f" {hrmax} bpm. " + i18n.t("highest seen in your runs; add your age in Settings to use the Tanaka formula.", lang)
-               if src == "observed" else i18n.t("Add your age in Settings to see heart-rate ranges in bpm.", lang))
     soon = {t.isoformat(), (t + timedelta(days=1)).isoformat()}
-    if any(not d.get("why") for d in days if d["date"] in soon):
+    soon_days = [d for d in all_days if d["date"] in soon]
+    if any(not d.get("why") for d in soon_days):
         background.add_task(service.ensure_notes, user["id"])  # safety net if the nightly job hasn't run yet
-    weeks: list[list[dict]] = []
-    for d in days:
-        if not weeks or date.fromisoformat(d["date"]).weekday() == 0:
-            weeks.append([])
-        weeks[-1].append(d)
-    return templates.TemplateResponse(request, "plan.html", {
-        "user": user, "plan": saved, "weeks": weeks, "today": t.isoformat(), "coach_on": coach.enabled(),
+    return templates.TemplateResponse(request, "plan.html", ctx | {
+        "soon_days": soon_days, "coach_on": coach.enabled(),
         "summary": db.get_summary(user["id"]), "m": service.current_metrics(user["id"], saved),
         "chart": service.chart(user["id"], saved), "recent": service.recent_runs(user["id"]),
-        "phases": phases, "phase_now": phase_now, "checkpoints": {x["checkpoint"] for x in phases if x["checkpoint"]},
-        "phase_results": [d["checkpoint_result"] for d in all_days if d.get("checkpoint_result")],
-        "hrmax": hrmax, "hr_note": hr_note, "paces": service.plan_paces(saved),
-        "date": date, "days_left": (date.fromisoformat(saved["params"]["event_date"]) - t).days})
+        "phase_now": phase_now, "phase_results": [d["checkpoint_result"] for d in all_days if d.get("checkpoint_result")],
+        "days_left": (date.fromisoformat(saved["params"]["event_date"]) - t).days})
+
+
+@app.get("/plan/schedule")
+def show_schedule(request: Request, week: str = ""):
+    """The whole plan, one week per page."""
+    user = current_user(request)
+    if not user:
+        return RedirectResponse("/")
+    saved = db.get_plan(user["id"])
+    if not saved:
+        return RedirectResponse("/new")
+    ctx = plan_context(request, user, saved)
+    days = ctx["all_days"]
+    mondays = sorted({(date.fromisoformat(d["date"]) - timedelta(days=date.fromisoformat(d["date"]).weekday())).isoformat()
+                      for d in days})
+    t = service.today()
+    this_week = (t - timedelta(days=t.weekday())).isoformat()
+    monday = week if week in mondays else (this_week if this_week in mondays else mondays[0])
+    i = mondays.index(monday)
+    end = (date.fromisoformat(monday) + timedelta(days=6)).isoformat()
+    return templates.TemplateResponse(request, "schedule.html", ctx | {
+        "monday": monday, "week_days": [d for d in days if monday <= d["date"] <= end],
+        "week_no": i + 1, "week_count": len(mondays),
+        "prev_week": mondays[i - 1] if i else None, "next_week": mondays[i + 1] if i + 1 < len(mondays) else None})
 
 
 FAMILIES = [("EASY", "Easy runs"), ("LONG", "Long runs"), ("TEMPO", "Tempo runs"), ("INT", "Intervals"),
@@ -303,13 +328,14 @@ async def settings_save(request: Request):
 
 @app.post("/plan/variation")
 def choose_variation(request: Request, background: BackgroundTasks, day: str = Form(...), idx: int = Form(...),
-                     var: str = Form(...)):
+                     var: str = Form(...), next: str = Form("/plan")):
     user = current_user(request)
     if not user:
         return RedirectResponse("/", status_code=303)
     if service.set_variation(user["id"], day, idx, var):
         background.add_task(service.ensure_notes, user["id"])
-    return RedirectResponse(f"/plan#d-{day}", status_code=303)
+    back = next if next.startswith("/") and not next.startswith("//") else "/plan"  # stay on this site
+    return RedirectResponse(f"{back}#d-{day}", status_code=303)
 
 
 # --- Strava webhook: https://developers.strava.com/docs/webhooks/ ---

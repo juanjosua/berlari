@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block content %}
+{% set p = plan.params %}
+<p><a href="/plan">← {{ t("My plan") }}</a></p>
+<h1>{{ p.name or t({"5k": "5K", "10k": "10K", "half": "Half marathon", "marathon": "Marathon"}[p.distance]) }}
+  · {{ ld(p.event_date, "%d %b %Y") }}</h1>
+<nav class="weeknav" aria-label="{{ t('Weeks') }}">
+  {% if prev_week %}<a class="btn ghost" href="/plan/schedule?week={{ prev_week }}">← {{ t("Previous") }}</a>{% else %}<span></span>{% endif %}
+  <span class="muted small">{{ t("Week") }} {{ week_no }}/{{ week_count }}</span>
+  {% if next_week %}<a class="btn ghost" href="/plan/schedule?week={{ next_week }}">{{ t("Next") }} →</a>{% else %}<span></span>{% endif %}
+</nav>
+{% if week_days and week_days[0].phase %}<h2 class="phase-h">{{ t("Phase") }}: {{ phase_label(week_days[0].phase) }}</h2>{% endif %}
+<section class="week">
+  <h2>{{ t("Week of") }} {{ ld(monday, "%d %b") }}
+    {% set ns = namespace(m=0) %}{% for d in week_days %}{% for s in d.sessions %}{% if not s.km %}{% set ns.m = ns.m + (s.minutes or 0) %}{% endif %}{% endfor %}{% endfor %}
+    <span class="muted">{% set wk = week_days | sum(attribute="km") %}{% if wk %}{{ "%.0f" | format(wk) }} km{% endif %}{% if wk and ns.m %} + {% endif %}{% if ns.m %}{{ ns.m }} {{ t("min") }}{% endif %}</span></h2>
+  <ol>{% for d in week_days %}{% include "_day.html" %}{% endfor %}</ol>
+</section>
+{% endblock %}

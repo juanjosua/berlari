@@ -3,7 +3,8 @@ and the heart-rate zone it should be done in. Texts are (English, Indonesian). P
 
 Placeholders in step texts are filled per athlete: {easy_hr} {hard_hr} {tempo_hr} {walk_hr} (bpm ranges,
 or % of max HR when max HR is unknown) and {easy_pace} {tempo_pace} {int_pace} {race_pace}.
-Only variations whose structure can be seen in Strava data (speed and heart-rate samples) are listed."""
+Three per session type (the most widely used, plus run-walk / walk breaks / Norwegian 4x4 for
+beginners), all checkable from Strava data (speed and heart-rate samples)."""
 
 # Heart-rate zones as fractions of max HR.
 Z_WALK, Z_EASY, Z_LONG, Z_TEMPO, Z_HARD = (0.55, 0.70), (0.60, 0.75), (0.65, 0.78), (0.80, 0.88), (0.85, 0.95)
@@ -32,24 +33,6 @@ V = {
                   "Jaga detak jantung di {easy_hr} saat jogging; bagian jalan membuatnya turun lagi."),
                  ("As it gets easier over the weeks, jog longer and walk shorter (e.g. 3 min jog / 1 min walk).",
                   "Saat makin mudah dari minggu ke minggu, perpanjang jogging dan perpendek jalan (mis. 3 menit jogging / 1 menit jalan).")]},
-        {"id": "walk", "acts": "walk", "zone": Z_WALK,
-         "label": ("Brisk walk", "Jalan cepat"),
-         "what": ("A fast, purposeful walk. Very low impact, good for recovery days or when starting from zero.",
-                  "Jalan cepat dan mantap. Benturannya sangat ringan, cocok untuk hari pemulihan atau saat mulai dari nol."),
-         "how": [("Walk fast enough that you breathe a bit harder but can still talk easily.",
-                  "Jalan cukup cepat sampai napas sedikit lebih berat tapi masih bisa bicara dengan mudah."),
-                 ("Keep heart rate in {walk_hr}. Record it on Strava as a Walk.",
-                  "Jaga detak jantung di {walk_hr}. Catat di Strava sebagai Walk.")]},
-        {"id": "recovery", "acts": "run", "zone": (0.55, 0.72),
-         "label": ("Recovery run", "Lari pemulihan"),
-         "what": ("A short, very slow run the day after a hard session. It feels almost too slow, and that's the "
-                  "point: blood flow helps the legs recover without adding stress.",
-                  "Lari pendek dan sangat pelan sehari setelah sesi berat. Rasanya hampir terlalu pelan, dan memang "
-                  "begitu tujuannya: aliran darah membantu kaki pulih tanpa menambah beban."),
-         "how": [("Run 20–40 minutes, slower than your normal easy pace.",
-                  "Lari 20–40 menit, lebih pelan dari pace santai biasa."),
-                 ("Keep heart rate below {recovery_top}. Walk if needed.",
-                  "Jaga detak jantung di bawah {recovery_top}. Jalan kalau perlu.")]},
         {"id": "strides", "acts": "run", "zone": Z_EASY,
          "label": ("Easy run + strides", "Lari santai + strides"),
          "what": ("An easy run finished with short, fast but relaxed accelerations called strides. They teach your "
@@ -62,24 +45,6 @@ V = {
                   "Di akhir, lakukan 6 strides: percepat selama 20 detik sampai sekitar 90% usaha, tetap rileks (bukan sprint)."),
                  ("Walk or jog 60 seconds between strides so each one feels fresh.",
                   "Jalan atau jogging 60 detik di antara strides supaya tiap strides terasa segar.")]},
-        {"id": "progression", "acts": "run", "zone": (0.60, 0.80),
-         "label": ("Progression easy run", "Lari santai progresif"),
-         "what": ("An easy run that starts very slowly and ends a little quicker. Good on days when your legs feel stiff.",
-                  "Lari santai yang dimulai sangat pelan dan berakhir sedikit lebih cepat. Cocok saat kaki terasa kaku."),
-         "how": [("First third: very easy, slower than {easy_pace}.", "Sepertiga awal: sangat santai, lebih pelan dari {easy_pace}."),
-                 ("Middle third: your normal easy pace.", "Sepertiga tengah: pace santai biasa."),
-                 ("Last third: a bit quicker, still able to talk (heart rate up to the top of {easy_hr}).",
-                  "Sepertiga akhir: sedikit lebih cepat, masih bisa bicara (detak jantung sampai batas atas {easy_hr}).")]},
-        {"id": "trail", "acts": "run", "zone": Z_EASY,
-         "label": ("Trail / soft-surface run", "Lari trail / permukaan lunak"),
-         "what": ("An easy run on dirt, grass or hilly trails. Softer ground is kinder to joints and strengthens "
-                  "feet and ankles. Pace doesn't matter here, effort does.",
-                  "Lari santai di tanah, rumput atau jalur berbukit. Permukaan lunak lebih ramah sendi dan menguatkan "
-                  "kaki serta pergelangan. Pace tidak penting di sini, yang penting usaha."),
-         "how": [("Choose a trail, park or rolling route and run by feel, not by pace.",
-                  "Pilih jalur trail, taman atau rute bergelombang dan lari sesuai rasa, bukan pace."),
-                 ("Keep heart rate in {easy_hr}; walk the steep uphills. Record as Trail Run if you can.",
-                  "Jaga detak jantung di {easy_hr}; jalan saja di tanjakan curam. Catat sebagai Trail Run kalau bisa.")]},
     ],
     "LONG": [
         {"id": "classic", "acts": "run", "zone": Z_LONG,
@@ -103,16 +68,6 @@ V = {
                  ("Walk briskly during the breaks, then start running again before you feel rested.",
                   "Jalan cepat saat jeda, lalu mulai lari lagi sebelum merasa benar-benar pulih."),
                  ("Practise drinking during the walk breaks.", "Latih minum saat jeda jalan.")]},
-        {"id": "progression", "acts": "run", "zone": (0.65, 0.85),
-         "label": ("Progression long run", "Lari jauh progresif"),
-         "what": ("A long run that starts easy and gets faster bit by bit. It teaches you to push when your legs are "
-                  "already tired, like the second half of a race.",
-                  "Lari jauh yang dimulai santai dan makin cepat sedikit demi sedikit. Melatihmu tetap mendorong saat "
-                  "kaki sudah lelah, seperti paruh kedua lomba."),
-         "how": [("First half: easy (heart rate {long_hr}).", "Paruh pertama: santai (detak jantung {long_hr})."),
-                 ("Then speed up a little every 2–3 km.", "Lalu percepat sedikit tiap 2–3 km."),
-                 ("Last quarter: steady, close to race pace ({race_pace}), never all-out.",
-                  "Seperempat akhir: stabil, mendekati pace lomba ({race_pace}), jangan habis-habisan.")]},
         {"id": "fast_finish", "acts": "run", "zone": (0.65, 0.88),
          "label": ("Fast-finish long run", "Lari jauh fast finish"),
          "what": ("Mostly easy, but the final 15–20 minutes are run at tempo effort. It trains you to hold a strong "
@@ -125,39 +80,6 @@ V = {
                   "comfortably hard, you can only say a few words.",
                   "Untuk 15–20 menit terakhir, ganti ke pace tempo ({tempo_pace}, detak jantung {tempo_hr}): "
                   "berat tapi terkendali, hanya bisa bicara beberapa kata.")]},
-        {"id": "race_pace", "acts": "run", "zone": (0.65, 0.88),
-         "label": ("Long run with race-pace blocks", "Lari jauh dengan blok pace lomba"),
-         "what": ("An easy long run with two longer stretches at your goal race pace. You practise the exact pace "
-                  "and drinking you'll use on race day.",
-                  "Lari jauh santai dengan dua bagian panjang di pace target lomba. Kamu berlatih pace dan cara minum "
-                  "yang persis akan dipakai saat lomba."),
-         "how": [("Run the first half easy (heart rate {long_hr}).", "Lari paruh pertama dengan santai (detak jantung {long_hr})."),
-                 ("Then run 15 minutes at goal race pace ({race_pace}), 5 minutes easy, and another 15 minutes at race pace.",
-                  "Lalu lari 15 menit di pace target lomba ({race_pace}), 5 menit santai, dan 15 menit lagi di pace lomba."),
-                 ("Finish the rest easy.", "Selesaikan sisanya dengan santai.")]},
-        {"id": "surges", "acts": "run", "zone": (0.65, 0.90),
-         "label": ("Long run with surges", "Lari jauh dengan akselerasi"),
-         "what": ("An easy long run with a few short pickups. It keeps the run interesting and practises changing "
-                  "pace on tired legs, like passing someone in a race.",
-                  "Lari jauh santai dengan beberapa akselerasi pendek. Membuat lari tidak membosankan dan melatih "
-                  "perubahan pace dengan kaki lelah, seperti menyalip orang saat lomba."),
-         "how": [("Run easy (heart rate {long_hr}).", "Lari santai (detak jantung {long_hr})."),
-                 ("In the second half, 6 times: speed up for 1–2 minutes to a hard-but-controlled effort, then "
-                  "settle back to easy for at least 5 minutes.",
-                  "Di paruh kedua, 6 kali: percepat 1–2 menit sampai usaha berat tapi terkendali, lalu kembali santai "
-                  "minimal 5 menit.")]},
-        {"id": "hilly", "acts": "run", "zone": (0.65, 0.82),
-         "label": ("Hilly / trail long run", "Lari jauh berbukit / trail"),
-         "what": ("A long run on a hilly or trail route, run by effort instead of pace. Climbs and descents build "
-                  "leg strength and joint stability.",
-                  "Lari jauh di rute berbukit atau trail, dengan patokan usaha, bukan pace. Tanjakan dan turunan "
-                  "membangun kekuatan kaki dan stabilitas sendi."),
-         "how": [("Pick a route with at least 10 m of climbing per km.",
-                  "Pilih rute dengan tanjakan minimal 10 m per km."),
-                 ("Keep the effort easy (heart rate {long_hr}): slow down uphill, walk steep parts, "
-                  "take short quick steps downhill.",
-                  "Jaga usaha tetap santai (detak jantung {long_hr}): pelankan di tanjakan, jalan di bagian curam, "
-                  "langkah pendek dan cepat saat turunan.")]},
     ],
     "TEMPO": [
         {"id": "steady", "acts": "run", "zone": Z_TEMPO,
@@ -221,35 +143,6 @@ V = {
                   "Lari 800 m di pace interval ({int_pace}); sekitar 3–4 menit. Detak jantung naik ke {hard_hr}."),
                  ("Jog easily for 2–3 minutes (or 400 m) to recover.", "Jogging santai 2–3 menit (atau 400 m) untuk pulih."),
                  ("Repeat 6 times, then cool down 10 minutes easy.", "Ulangi 6 kali, lalu pendinginan 10 menit santai.")]},
-        {"id": "hiit", "acts": "run", "zone": Z_HARD,
-         "label": ("HIIT 30/30", "HIIT 30/30"),
-         "what": ("High-intensity interval training: 30 seconds fast, 30 seconds slow, many times. The short "
-                  "efforts let you spend a lot of time at high intensity without exhausting yourself.",
-                  "High-intensity interval training: 30 detik cepat, 30 detik pelan, berkali-kali. Usaha yang pendek "
-                  "membuatmu bisa lama di intensitas tinggi tanpa kehabisan tenaga."),
-         "how": [("Warm up: 10 minutes easy jog.", "Pemanasan: 10 menit jogging santai."),
-                 ("30 seconds fast (about your 5K race effort, faster than {tempo_pace}).",
-                  "30 detik cepat (sekitar usaha lomba 5K, lebih cepat dari {tempo_pace})."),
-                 ("30 seconds slow jog (or walk if you need to).", "30 detik jogging pelan (atau jalan kalau perlu)."),
-                 ("Repeat 12 times, then 10 minutes easy. Heart rate will rise toward {hard_hr} by the last reps.",
-                  "Ulangi 12 kali, lalu 10 menit santai. Detak jantung naik ke arah {hard_hr} di repetisi terakhir.")]},
-        {"id": "pyramid", "acts": "run", "zone": Z_HARD,
-         "label": ("Pyramid intervals 1-2-3-2-1", "Interval piramida 1-2-3-2-1"),
-         "what": ("Intervals that get longer, then shorter again, like climbing up and down a pyramid. You run hard "
-                  "for 1 minute, then 2, then 3, then back down to 2 and 1, with an easy jog after each that "
-                  "lasts as long as the hard part before it.",
-                  "Interval yang makin panjang lalu memendek lagi, seperti naik lalu turun piramida. Kamu lari cepat "
-                  "1 menit, lalu 2, lalu 3, lalu turun lagi ke 2 dan 1, dengan jogging santai setelah tiap bagian "
-                  "yang lamanya sama dengan bagian cepat sebelumnya."),
-         "how": [("Warm up: 10 minutes easy jog.", "Pemanasan: 10 menit jogging santai."),
-                 ("Fast 1 min → easy jog 1 min.", "Cepat 1 menit → jogging santai 1 menit."),
-                 ("Fast 2 min → easy jog 2 min.", "Cepat 2 menit → jogging santai 2 menit."),
-                 ("Fast 3 min → easy jog 3 min.", "Cepat 3 menit → jogging santai 3 menit."),
-                 ("Fast 2 min → easy jog 2 min, then fast 1 min.", "Cepat 2 menit → jogging santai 2 menit, lalu cepat 1 menit."),
-                 ("'Fast' = hard but controlled, heart rate {hard_hr}; run the short ones a little quicker than "
-                  "the long one. Cool down 10 minutes easy.",
-                  "'Cepat' = berat tapi terkendali, detak jantung {hard_hr}; bagian pendek sedikit lebih cepat dari "
-                  "bagian panjang. Pendinginan 10 menit santai.")]},
         {"id": "fartlek", "acts": "run", "zone": (0.75, 0.90),
          "label": ("Fartlek (speed play)", "Fartlek (permainan kecepatan)"),
          "what": ("Swedish for 'speed play': an easy run with fast bursts whenever you feel like it, e.g. to the "
@@ -263,18 +156,6 @@ V = {
                  ("Between surges, jog easily until you feel ready again (at least 2 minutes).",
                   "Di antara akselerasi, jogging santai sampai merasa siap lagi (minimal 2 menit)."),
                  ("Finish with 10 minutes easy.", "Akhiri dengan 10 menit santai.")]},
-        {"id": "sprints", "acts": "run", "zone": None,
-         "label": ("Sprint intervals", "Sprint interval"),
-         "what": ("Very short, near-maximal sprints with full recovery. They build power and running economy. "
-                  "Heart rate lags behind on efforts this short, so go by feel.",
-                  "Sprint sangat pendek hampir maksimal dengan pemulihan penuh. Membangun tenaga dan efisiensi lari. "
-                  "Detak jantung tertinggal pada usaha sesingkat ini, jadi pakai patokan rasa."),
-         "how": [("Warm up: 15 minutes easy jog plus a few strides.", "Pemanasan: 15 menit jogging santai plus beberapa strides."),
-                 ("Sprint 20 seconds at about 95% effort, upright and relaxed.",
-                  "Sprint 20 detik di sekitar 95% usaha, badan tegak dan rileks."),
-                 ("Walk or jog slowly for 2–3 minutes until fully recovered.",
-                  "Jalan atau jogging pelan 2–3 menit sampai benar-benar pulih."),
-                 ("Repeat 8 times, then cool down 10 minutes easy.", "Ulangi 8 kali, lalu pendinginan 10 menit santai.")]},
     ],
 }
 
@@ -389,7 +270,6 @@ def fill(text: str, max_hr: float | None, paces: dict, lang: str) -> str:
     vals = {"easy_hr": zone_text(Z_EASY, max_hr, lang), "long_hr": zone_text(Z_LONG, max_hr, lang),
             "tempo_hr": zone_text(Z_TEMPO, max_hr, lang), "hard_hr": zone_text(Z_HARD, max_hr, lang),
             "walk_hr": zone_text(Z_WALK, max_hr, lang),
-            "recovery_top": f"{round(0.72 * max_hr)} bpm" if max_hr else ("72% HR maks" if lang == "id" else "72% of max HR"),
             "easy_pace": pace("easy"), "tempo_pace": pace("tempo"), "int_pace": pace("interval"),
             "race_pace": pace("race")}
     return text.format(**vals)

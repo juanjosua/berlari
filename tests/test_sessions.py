@@ -10,13 +10,13 @@ def run(km, minutes, hr=None, max_hr=None, splits=None, blocks=None):
             "km_splits": splits, "hard_blocks": blocks}
 
 
-def test_easy_walk_checks_duration_and_heart_rate_cap():
-    ew = {"type": "EW", "minutes": 40, "hr_max": 132}
+def test_legacy_walk_session_checks_duration_and_heart_rate_cap():
+    ew = {"type": "EW", "minutes": 40, "hr_max": 132}  # old imported plans; now treated as run-walk
     assert check(ew, [walk(42, 128)], True, 190)["state"] == "done"
     c = check(ew, [walk(42, 141)], True, 190)
     assert c["state"] == "partial" and "132" in c["en"] and "132" in c["id"]
     assert check(ew, [walk(20, 120)], True, 190)["state"] == "partial"  # too short
-    assert check(ew, [run(5, 40)], True, 190)["state"] == "missed"  # a run isn't a walk
+    assert check(ew, [run(5, 40)], True, 190)["state"] == "done"  # run-walk accepts a run too
     assert check(ew, [], False, 190)["state"] is None  # today, not done yet
 
 
@@ -48,12 +48,6 @@ def test_interval_variations_count_fast_efforts():
     track = b(600, EASY) + sum((b(200, FAST) + b(150, EASY) for _ in range(6)), []) + b(600, EASY)
     assert var_state("INT", "track", srun(track))["state"] == "done"
     assert var_state("INT", "track", srun(b(3000, EASY)))["state"] == "partial"
-    hiit = b(600, EASY) + sum((b(30, FAST) + b(30, EASY) for _ in range(12)), []) + b(300, EASY)
-    assert var_state("INT", "hiit", srun(hiit))["state"] == "done"
-    sprints = b(600, 2.0) + sum((b(20, 4.6) + b(150, 2.0) for _ in range(8)), [])
-    assert var_state("INT", "sprints", srun(sprints))["state"] == "done"
-    pyramid = b(600, EASY) + sum((b(x, FAST) + b(x, EASY) for x in (60, 120, 180, 120, 60)), [])
-    assert var_state("INT", "pyramid", srun(pyramid))["state"] == "done"
     fartlek = sum((b(240, EASY) + b(90, FAST) for _ in range(8)), [])
     c = var_state("INT", "fartlek", srun(fartlek))
     assert c["state"] == "done" and "Fartlek" in c["en"] and "✓" in c["en"]
@@ -74,19 +68,10 @@ def test_tempo_variations_use_tempo_pace():
 def test_easy_and_long_variations():
     assert var_state("EASY", "aerobic", srun(b(2400, EASY), avg=135))["state"] == "done"
     assert var_state("EASY", "aerobic", srun(b(2400, EASY), avg=160))["state"] == "partial"  # 75% of 190 = 142
-    assert var_state("EASY", "recovery", srun(b(3600, EASY), avg=120))["state"] == "partial"  # too long
     strides = b(2400, EASY) + sum((b(20, 4.2) + b(60, 2.4) for _ in range(6)), [])
     assert var_state("EASY", "strides", srun(strides))["state"] == "done"
-    prog = [2.5 + 0.6 * i / 480 for i in range(480)]
-    assert var_state("EASY", "progression", srun(prog, km=7))["state"] == "done"
-    assert var_state("EASY", "trail", srun(b(2400, EASY), typ="TrailRun"))["state"] == "done"
-    assert var_state("EASY", "trail", srun(b(2400, EASY)))["state"] == "partial"
     T = 1000 / 310 + 0.05
     assert var_state("LONG", "fast_finish", srun(b(3600, EASY) + b(900, T), km=16))["state"] == "done"
-    R = 1000 / 330
-    rp = b(1800, EASY) + b(900, R) + b(300, EASY) + b(900, R) + b(600, EASY)
-    assert var_state("LONG", "race_pace", srun(rp, km=18))["state"] == "done"
-    assert var_state("LONG", "hilly", srun(b(4800, EASY), km=16, elev=200))["state"] == "done"
     assert var_state("LONG", "classic", srun(b(4800, EASY), km=16, avg=170))["state"] == "partial"
 
 
@@ -159,7 +144,7 @@ def test_generic_workout_is_not_counted_as_strength():
 def test_title_follows_swapped_interval_variation():
     from app.sessions import label
     assert label({"type": "N4X4"}) == "Intervals"  # legacy types show as the app category
-    assert label({"type": "N4X4", "var": "hiit"}) == "Intervals" and label({"type": "N4X4", "var": "hiit"}, "id") == "Interval"
+    assert label({"type": "N4X4", "var": "track"}) == "Intervals" and label({"type": "N4X4"}, "id") == "Interval"
 
 
 def test_run_walk_and_walk_breaks_detected_from_speed():
@@ -169,8 +154,6 @@ def test_run_walk_and_walk_breaks_detected_from_speed():
     assert c["state"] == "partial" and "walk breaks" in c["en"]
     walk = {"type": "Walk", "km": 3, "moving_min": 30, "avg_hr": 110}
     assert check({"type": "EASY", "var": "runwalk", "minutes": 30}, [walk], True, 190)["state"] == "done"
-    assert check({"type": "EASY", "var": "walk", "minutes": 30}, [walk], True, 190)["state"] == "done"
-    assert check({"type": "EASY", "var": "walk", "minutes": 30}, [walk | {"avg_hr": 150}], True, 190)["state"] == "partial"
     lr = sum((b(600, 2.6) + b(45, 1.3) for _ in range(6)), [])
     assert check({"type": "LONG", "var": "walk_breaks", "km": 8}, [srun(lr, km=8)], True, 190)["state"] == "done"
 
@@ -184,3 +167,9 @@ def test_every_variation_explains_itself_in_both_languages():
                 assert "{" not in fill(step[1], 185, {"easy": 420, "tempo": 360, "interval": 330, "race": 480}, "id")
     for r in STRENGTH:
         assert all(m in EXERCISES and EXERCISES[m][2][1] for m in r["moves"])
+
+
+def test_removed_variation_falls_back_to_default():
+    from app.sessions import variation, variations
+    assert [v["id"] for v in variations({"type": "INT"})] == ["n4x4", "track", "fartlek"]
+    assert variation({"type": "LONG", "var": "hilly"})["id"] == "classic"  # stored before it was removed

@@ -134,13 +134,13 @@ def build_plan(stats: Stats, distance: str, event: date, runs_per_week: int,
             sess: list[dict] = []
             if dow == long_dow:
                 long_var = ("walk_breaks" if run_walk else
-                            {"base": "classic", "build": ["classic", "progression", "surges"][w % 3],
-                             "peak": ["fast_finish", "race_pace", "classic"][w % 3], "taper": "classic"}[phase])
+                            {"base": "classic", "build": "classic", "peak": ["fast_finish", "classic"][w % 2],
+                             "taper": "classic"}[phase])
                 sess.append({"type": "LONG", "km": long_km, "pace": p["easy"], "warmup": wu,
                              "var": pick("LONG", long_var), "rec": long_var})
             elif dow == run_days[0]:
                 if quality == "INT":
-                    rec = "n4x4" if beginner else ["track", "hiit", "pyramid", "fartlek", "n4x4", "sprints"][(w // 3) % 6]
+                    rec = "n4x4" if beginner else ["track", "fartlek", "n4x4"][(w // 3) % 3]
                     sess.append({"type": "INT", "km": quality_km, "minutes": 40, "warmup": wu,
                                  "pace": p["interval"], "var": pick("INT", rec), "rec": rec})
                 else:
@@ -150,10 +150,10 @@ def build_plan(stats: Stats, distance: str, event: date, runs_per_week: int,
                                  "var": pick("TEMPO", trec), "rec": trec})
             elif dow in run_days:
                 rec = ("runwalk" if run_walk else "strides" if phase in ("build", "peak") and dow == easy_dows[-1]
-                       else "progression" if phase == "build" and w % 2 else "aerobic")
+                       else "aerobic")
                 var = pick("EASY", rec)
                 sess.append({"type": "EASY", "km": easy_km, "pace": p["easy"], "warmup": wu, "var": var, "rec": rec,
-                             **({"minutes": rnd5(easy_km * p["easy"] / 60)} if var in ("runwalk", "walk") else {})})
+                             **({"minutes": rnd5(easy_km * p["easy"] / 60)} if var == "runwalk" else {})})
             if dow in strength_dows and (event - d).days > 4:
                 srec = ["classic", "single_leg", "core_hips"][w % 3]
                 sess.append({"type": "SBW", "rounds": rounds,

@@ -66,8 +66,6 @@ def describe(s: dict, lang: str = "en") -> str:
                  f": {s['run_min']:g} min jog / {s['walk_min']:g} min walk") if s.get("run_min") else ""
         return (f"Lari-jalan {amount}{split}{hr}" if id_ else f"Run-walk {amount}{split}{hr}")
     vid = s.get("var")
-    if t == "EASY" and vid == "walk":
-        return (f"Jalan cepat {m or round((km or 3) * 11)} menit{hr}" if id_ else f"Brisk walk {m or round((km or 3) * 11)} min{hr}")
     if t == "EASY" and vid == "runwalk" and m:
         about = f" (±{km:g} km)" if km else ""
         return (f"Lari-jalan {m} menit{about}{hr}" if id_ else f"Run-walk {m} min{about}{hr}")
@@ -104,9 +102,6 @@ CATEGORY = {"N4X4": "INT", "RW": "EASY", "LRW": "LONG"}  # legacy types show as 
 
 
 def label(s: dict, lang: str = "en") -> str:
-    v = variation(s)
-    if FAMILY.get(s["type"]) == "EASY" and v and v["id"] == "walk":
-        return ("Easy walk", "Jalan santai")[lang == "id"]
     t = CATEGORY.get(s["type"], s["type"])
     return LABELS.get(t, (t, t))[lang == "id"]
 
@@ -153,9 +148,9 @@ def runs(flags: list[bool], step: int = 5, gap: int = 10) -> list[int]:
 # Session type -> variation family, and the variation used when none was chosen.
 FAMILY = {"INT": "INT", "N4X4": "INT", "TEMPO": "TEMPO", "EASY": "EASY", "RW": "EASY", "EW": "EASY",
           "LONG": "LONG", "LRW": "LONG", "SBW": "SBW"}
-DEFAULT_VAR = {"INT": "track", "N4X4": "n4x4", "TEMPO": "steady", "EASY": "aerobic", "RW": "runwalk", "EW": "walk",
+DEFAULT_VAR = {"INT": "track", "N4X4": "n4x4", "TEMPO": "steady", "EASY": "aerobic", "RW": "runwalk", "EW": "runwalk",
                "LONG": "classic", "LRW": "walk_breaks", "SBW": "classic"}
-CAPPED = {"aerobic", "recovery", "runwalk", "walk", "trail", "classic", "walk_breaks", "hilly"}  # HR-capped variations
+CAPPED = {"aerobic", "runwalk", "classic", "walk_breaks"}  # HR-capped variations
 
 
 def variations(s: dict) -> list[dict]:
@@ -165,8 +160,12 @@ def variations(s: dict) -> list[dict]:
 
 def variation(s: dict) -> dict | None:
     """The chosen (or default) variation of a session, or None if its type has none."""
-    vid = s.get("var") or DEFAULT_VAR.get(s["type"])
-    return next((v for v in variations(s) if v["id"] == vid), None)
+    vs = variations(s)
+    for vid in (s.get("var"), DEFAULT_VAR.get(s["type"])):  # a variation that was removed falls back to the default
+        found = next((v for v in vs if v["id"] == vid), None)
+        if found:
+            return found
+    return None
 
 
 def _mean(xs):
@@ -194,8 +193,6 @@ def check_variation(vid: str, a: dict, max_hr: float, paces: dict, zone: tuple |
     if vid in CAPPED and zone and avg and avg > zone[1] * max_hr + 2:
         return bad("partial", f"Avg HR {avg} is above {zone[1] * max_hr:.0f} ({zone[1]:.0%} of max): too hard for this session.",
                    f"Rata-rata HR {avg} di atas {zone[1] * max_hr:.0f} ({zone[1]:.0%} maks): terlalu berat untuk sesi ini.")
-    if vid == "walk":
-        return None
     if vid in ("runwalk", "walk_breaks"):
         if a.get("type") in WALK_TYPES:
             return None  # logged as a walk: the walking part is obviously there
@@ -217,26 +214,15 @@ def check_variation(vid: str, a: dict, max_hr: float, paces: dict, zone: tuple |
             return bad("partial", f"{blocks} of 4 hard blocks reached 85% of max HR.",
                        f"{blocks} dari 4 blok berat mencapai 85% HR maks.")
         return None
-    if vid in ("aerobic", "classic", "recovery"):
-        if vid == "recovery" and a.get("moving_min", 0) > 50:
-            return bad("partial", "Longer than a recovery run (over 50 min).", "Lebih lama dari lari pemulihan (lebih dari 50 menit).")
-        return None
-    if vid in ("trail", "hilly"):
-        elev = (a.get("elev_gain_m") or 0) / max(a.get("km") or 1, 0.1)
-        if a.get("type") != "TrailRun" and elev < (10 if vid == "hilly" else 6):
-            return bad("partial", f"Looks like flat road ({elev:.0f} m climb per km).",
-                       f"Sepertinya jalan datar ({elev:.0f} m tanjakan per km).")
+    if vid in ("aerobic", "classic"):
         return None
     # the rest need the speed stream
     if not v:
         return bad("done", "Structure can't be checked: no GPS speed data for this run.",
                    "Struktur tidak bisa dicek: tidak ada data kecepatan GPS untuk lari ini.")
-    if vid in ("track", "hiit", "sprints", "pyramid", "fartlek", "surges"):
-        need, got = {
-            "track": (5, fast(1.12, 100, 330)), "hiit": (10, fast(1.12, 15, 75)), "sprints": (6, fast(1.3, 5, 40)),
-            "pyramid": (4, fast(1.12, 40, 260)), "fartlek": (6, fast(1.12, 40, 160)), "surges": (5, fast(1.12, 40, 160)),
-        }[vid]
-        if len(got) < need or (vid == "pyramid" and max(got, default=0) < 140):
+    if vid in ("track", "fartlek"):
+        need, got = {"track": (5, fast(1.12, 100, 330)), "fartlek": (6, fast(1.12, 40, 160))}[vid]
+        if len(got) < need:
             return bad("partial", f"Found {len(got)} fast efforts; this session needs about {need}.",
                        f"Terdeteksi {len(got)} upaya cepat; sesi ini butuh sekitar {need}.")
     elif vid == "strides":
@@ -259,15 +245,6 @@ def check_variation(vid: str, a: dict, max_hr: float, paces: dict, zone: tuple |
         last = _mean(v[-180:])  # last 15 min
         if last < 0.95 * tempo_v or (vid == "progressive" and last <= _mean(v[: n // 3])):
             return bad("partial", "The last 15 min weren't at tempo pace.", "15 menit terakhir belum di pace tempo.")
-    elif vid == "progression":
-        a_, b_ = (_mean(v[: n // 3]), _mean(v[-(n // 3):])) if a.get("km", 0) < 15 else (_mean(v[: n // 2]), _mean(v[-(n // 4):]))
-        if b_ < 1.04 * a_:
-            return bad("partial", "Pace didn't build up toward the end.", "Pace tidak meningkat menjelang akhir.")
-    elif vid == "race_pace" and race_v:
-        got = [d for d in runs([0.94 * race_v <= x <= 1.08 * race_v for x in v], gap=15) if d >= 600]
-        if len(got) < 2:
-            return bad("partial", f"Found {len(got)} blocks of 10+ min at race pace; aim for 2.",
-                       f"Terdeteksi {len(got)} blok 10+ menit di pace lomba; targetnya 2.")
     return None
 
 

@@ -37,8 +37,13 @@ def test_login_plan_forget(monkeypatch):
     r = c.post("/new", data={"event_date": event, "distance": "10k", "runs_per_week": 4, "goal_minutes": "50"})
     assert r.status_code == 303
     page = c.get("/plan").text
-    assert "Race day" in page and "5:00/km" in page
     assert "20.0 km/week" in page and "6:00/km" in page  # 10 runs × 8 km in 4 weeks, 6:00 typical pace
+    assert "Today and tomorrow" in page and "Full schedule" in page and "Week of" not in page
+    ev = date.fromisoformat(event)
+    last = c.get("/plan/schedule", params={"week": (ev - timedelta(days=ev.weekday())).isoformat()}).text
+    assert "Race day" in last and "5:00/km" in last and "Previous" in last
+    first = c.get("/plan/schedule").text  # defaults to this week
+    assert "Week 1/" in first and "Next" in first
 
     assert c.post("/new", data={"event_date": "2000-01-01", "distance": "10k"}).status_code == 400
     c.post("/forget")
@@ -158,8 +163,8 @@ def test_choose_variation_only_for_upcoming_sessions(monkeypatch):
     d = next(x for x in days if x["date"] > date.today().isoformat() and any(s["type"] == "LONG" for s in x["sessions"]))
     idx = next(i for i, s in enumerate(d["sessions"]) if s["type"] == "LONG")  # beginners start with LRW weeks
     assert "Choose another variation" in c.get("/plan").text
-    c.post("/plan/variation", data={"day": d["date"], "idx": idx, "var": "hilly"})
-    assert next(x for x in db.get_plan(801)["days"] if x["date"] == d["date"])["sessions"][idx]["var"] == "hilly"
+    c.post("/plan/variation", data={"day": d["date"], "idx": idx, "var": "fast_finish"})
+    assert next(x for x in db.get_plan(801)["days"] if x["date"] == d["date"])["sessions"][idx]["var"] == "fast_finish"
     assert not service.set_variation(801, d["date"], idx, "sprints")  # not a long-run variation
     assert not service.set_variation(801, "2000-01-01", 0, "classic")  # past/unknown day
     db.delete_user(801)
@@ -175,11 +180,11 @@ def test_settings_age_gives_tanaka_max_hr_and_defaults_apply(monkeypatch):
     state = c.get("/auth/login").headers["location"].split("state=")[1]
     c.get("/auth/callback", params={"code": "x", "state": state})
     c.post("/new", data={"event_date": (date.today() + timedelta(weeks=16)).isoformat(), "distance": "10k"})
-    c.post("/settings", data={"age": "30", "var_INT": "pyramid", "var_EASY": "", "var_LONG": "bogus"})
+    c.post("/settings", data={"age": "30", "var_INT": "fartlek", "var_EASY": "", "var_LONG": "bogus"})
     assert service.max_hr_info(901) == (187, "tanaka")  # 208 - 0.7 * 30 = 187
     future = [x for d in db.get_plan(901)["days"] if d["date"] >= date.today().isoformat()
               for x in d["sessions"] if x["type"] == "INT"]
-    assert future and all(x["var"] == "pyramid" for x in future)
+    assert future and all(x["var"] == "fartlek" for x in future)
     page = c.get("/plan").text
     assert "187 bpm" in page and "Tanaka" in page and "Checkpoint" in page
     assert "Settings" in c.get("/settings").text
