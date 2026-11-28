@@ -41,6 +41,21 @@
           {% if r.id %}· <a class="strava-link" href="https://www.strava.com/activities/{{ r.id }}" target="_blank" rel="noopener">View on Strava</a>{% endif %}</span>
         {% endfor %}
         {% if d.review %}<p class="review">{{ d.review }}</p>{% endif %}
+        {% if d.food %}{% set li = 1 if lang == "id" else 0 %}{% set f = d.food %}
+        <details class="food"><summary>🍽 {{ t("Meals") }} · {{ "{:,}".format(f.target.kcal) }} kcal · {{ f.target.protein }} g {{ t("protein") }}</summary>
+          <p class="small muted">{{ t("Target") }}: {{ "{:,}".format(f.target.kcal) }} kcal, {{ f.target.protein }} g {{ t("protein") }}, {{ f.target.carbs }} g {{ t("carbs") }}{% if f.target.deficit %} · {{ t("about") }} {{ f.target.loss_per_week_kg }} kg/{{ t("week") }} {{ t("weight loss") }}{% endif %}</p>
+          {% for key, name in meal_slots %}{% if f.menu.meals.get(key) %}
+          <div class="meal"><b>{{ name[li] }}</b>
+            <ul>{% for fid, n in grouped(f.menu.meals[key]) %}{% set x = food(fid) %}
+              <li>{{ x[0][li] }}{% if n > 1 %} <b>×{{ n }}</b>{% endif %}{% if x[4][li] %} <span class="muted">· {{ x[4][li] }}</span>{% endif %}</li>
+            {% endfor %}</ul></div>
+          {% endif %}{% endfor %}
+          {% if f.menu.meals.get("during") %}<div class="meal"><b>{{ t("During the long run") }}</b><ul>{% for fid, n in grouped(f.menu.meals.during) %}<li>{{ food(fid)[0][li] }}</li>{% endfor %}</ul></div>{% endif %}
+          <p class="small">≈ {{ "{:,}".format(f.menu.kcal) }} kcal · {{ f.menu.protein }} g {{ t("protein") }}</p>
+          <p class="small tip">💡 {{ f.tip[li] }}</p>
+          <p class="small muted">{{ t("Estimates for typical portions; check labels. General guidance, not a medical diet. With BMI 35+ or a health condition, check with a doctor or dietitian.") }}</p>
+        </details>
+        {% elif d.date >= today %}<p class="small muted">🍽 <a href="/settings">{{ t("Fill in About you (age, sex, height, weight) to get daily meal suggestions.") }}</a></p>{% endif %}
         {% if d.checkpoint_result %}<p class="result {{ 'passed' if d.checkpoint_result.passed else 'failed' }}">{{ pmsg(d.checkpoint_result) }}</p>{% endif %}
       </div>
     </li>

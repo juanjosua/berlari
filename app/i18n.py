@@ -85,6 +85,14 @@ ID = {
     "if you feel chest pain or pressure, dizziness, unusual shortness of breath, or sharp pain in a joint, shin or heel.":
         "bila merasa nyeri atau sesak di dada, pusing, napas pendek tidak biasa, atau nyeri tajam di sendi, tulang "
         "kering atau tumit.",
+    "Sex": "Jenis kelamin", "(for calorie needs)": "(untuk kebutuhan kalori)", "Male": "Laki-laki", "Female": "Perempuan",
+    "Meals": "Makanan", "protein": "protein", "carbs": "karbohidrat", "Target": "Target", "about": "sekitar",
+    "week": "minggu", "weight loss": "turun berat", "During the long run": "Saat lari jauh",
+    "Estimates for typical portions; check labels. General guidance, not a medical diet. With BMI 35+ or a health condition, check with a doctor or dietitian.":
+        "Perkiraan untuk porsi umum; cek label. Panduan umum, bukan diet medis. Dengan BMI 35+ atau kondisi kesehatan "
+        "tertentu, konsultasikan ke dokter atau ahli gizi.",
+    "Fill in About you (age, sex, height, weight) to get daily meal suggestions.":
+        "Isi Tentang kamu (umur, jenis kelamin, tinggi, berat) untuk mendapat saran makan harian.",
     "Week of": "Minggu", "Adjusted": "Disesuaikan", "Ran": "Lari", "in": "dalam", "min": "mnt",
     "Easy": "Santai", "Long": "Lari jauh", "Intervals": "Interval", "Tempo": "Tempo", "Rest": "Istirahat",
     "Race": "Lomba",

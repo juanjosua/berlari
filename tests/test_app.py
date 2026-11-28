@@ -246,3 +246,21 @@ def test_weight_change_in_settings_rebuilds_plan_keeping_past_and_picks(monkeypa
     assert light_peak > heavy_peak and service.bmi(921) == 27.7  # BMI under 30: normal build-up
     assert c.post("/settings", data={"age": "31", "height_cm": "170", "weight_kg": "80"}).headers["location"] == "/settings?saved=1"
     db.delete_user(921)
+
+
+def test_meal_suggestions_need_profile_then_show(monkeypatch):
+    from app import service
+    db.init()
+    monkeypatch.setattr(strava, "exchange_code", lambda code: (
+        db.save_user(931, "Food Runner", "a", "r", int(time.time()) + 3600), {"athlete": {"id": 931, "sex": "M"}})[1])
+    monkeypatch.setattr(strava, "recent_runs", lambda u: [])
+    c = TestClient(main.app, follow_redirects=False)
+    state = c.get("/auth/login").headers["location"].split("state=")[1]
+    c.get("/auth/callback", params={"code": "x", "state": state})
+    assert service.prefs(931)["sex"] == "M"  # taken from Strava
+    c.post("/new", data={"event_date": (date.today() + timedelta(weeks=20)).isoformat(), "distance": "half"})
+    assert "to get daily meal suggestions" in c.get("/plan").text
+    c.post("/settings", data={"age": "30", "sex": "M", "height_cm": "170", "weight_kg": "102"})
+    page = c.get("/plan").text
+    assert "Meals" in page and "kcal" in page and "Indomaret" in page
+    db.delete_user(931)

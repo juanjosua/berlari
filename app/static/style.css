@@ -230,3 +230,8 @@ header { position: relative; z-index: 10; }
 .row3 label { margin-bottom: 6px; font-size: .85rem; }
 .safety { margin-top: 12px; border-left: 4px solid #d98a00; }
 .safety p { margin: 6px 0 0; font-size: .92rem; }
+/* Meals */
+.food summary { cursor: pointer; font-size: .88rem; font-weight: 700; margin-top: 6px; color: var(--fg); }
+.food .meal { margin-top: 6px; font-size: .88rem; }
+.food .meal ul { margin: 2px 0 0; padding-left: 18px; color: var(--muted); }
+.food .tip { background: var(--bg); padding: 6px 8px; border-radius: 8px; }

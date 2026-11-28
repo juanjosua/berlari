@@ -15,7 +15,7 @@ from fastapi.templating import Jinja2Templates  # noqa: E402
 from jinja2 import pass_context  # noqa: E402
 from starlette.middleware.sessions import SessionMiddleware  # noqa: E402
 
-from . import coach, db, i18n, plan as P, service, sessions, strava, variations  # noqa: E402
+from . import coach, db, i18n, nutrition, plan as P, service, sessions, strava, variations  # noqa: E402
 from .plan import DISTANCES_KM, build_plan, fmt_pace, plan_to_dicts  # noqa: E402
 
 HERE = Path(__file__).parent
@@ -52,6 +52,9 @@ templates.env.globals["stext"] = pass_context(lambda ctx, s: sessions.describe(s
 templates.env.globals["swarm"] = pass_context(lambda ctx, s: sessions.warmup(s, ctx.get("lang", "en")))
 templates.env.globals["svars"] = sessions.variations
 templates.env.globals["exercise"] = lambda mid: variations.EXERCISES[mid]
+templates.env.globals["food"] = lambda fid: nutrition.FOODS[fid]
+templates.env.globals["grouped"] = lambda items: nutrition.grouped(items)
+templates.env.globals["meal_slots"] = nutrition.SLOTS
 templates.env.globals["rest_note"] = variations.REST_BETWEEN
 templates.env.globals["vzone"] = pass_context(lambda ctx, z: variations.zone_text(z, ctx.get("hrmax"), ctx.get("lang", "en")))
 templates.env.globals["vfill"] = pass_context(lambda ctx, st: variations.fill(
@@ -79,6 +82,8 @@ def current_user(request: Request) -> dict | None:
 def parse_body(form, old: dict) -> dict:
     """Age, height (cm) and weight (kg) from a form; out-of-range or blank values clear the field."""
     out = {}
+    if form.get("sex") in ("M", "F"):
+        out["sex"] = form.get("sex")
     for key, lo, hi in (("age", 10, 100), ("height_cm", 120, 230), ("weight_kg", 30, 250)):
         raw = (form.get(key) or "").strip().replace(",", ".")
         try:
@@ -122,6 +127,8 @@ def callback(request: Request, code: str = "", state: str = "", error: str = "")
             "error": "Strava login was cancelled or failed. Try again.", "login_url": login_url(request)})
     tok = strava.exchange_code(code)
     request.session["uid"] = tok["athlete"]["id"]
+    if tok["athlete"].get("sex") in ("M", "F") and not service.prefs(tok["athlete"]["id"]).get("sex"):
+        db.set_prefs(tok["athlete"]["id"], service.prefs(tok["athlete"]["id"]) | {"sex": tok["athlete"]["sex"]})
     if request.cookies.get("lang") in i18n.LANGS:
         db.set_lang(tok["athlete"]["id"], request.cookies["lang"])
     return RedirectResponse("/")
@@ -275,7 +282,7 @@ def show_plan(request: Request, background: BackgroundTasks):
         so_far = P.evaluate_phase({**phase_now, "end": (t - timedelta(days=1)).isoformat()}, all_days)
         phase_now["progress"] = so_far["ratio"] if so_far["sessions"] else None
     soon = {t.isoformat(), (t + timedelta(days=1)).isoformat()}
-    soon_days = [d for d in all_days if d["date"] in soon]
+    soon_days = [d | {"food": service.nutrition(user["id"], saved, d)} for d in all_days if d["date"] in soon]
     if any(not d.get("why") for d in soon_days):
         background.add_task(service.ensure_notes, user["id"])  # safety net if the nightly job hasn't run yet
     return templates.TemplateResponse(request, "plan.html", ctx | {
@@ -306,7 +313,8 @@ def show_schedule(request: Request, week: str = ""):
     i = mondays.index(monday)
     end = (date.fromisoformat(monday) + timedelta(days=6)).isoformat()
     return templates.TemplateResponse(request, "schedule.html", ctx | {
-        "monday": monday, "week_days": [d for d in days if monday <= d["date"] <= end],
+        "monday": monday,
+        "week_days": [d | {"food": service.nutrition(user["id"], saved, d)} for d in days if monday <= d["date"] <= end],
         "week_no": i + 1, "week_count": len(mondays),
         "prev_week": mondays[i - 1] if i else None, "next_week": mondays[i + 1] if i + 1 < len(mondays) else None})
 

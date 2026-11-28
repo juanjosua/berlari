@@ -54,6 +54,20 @@ def prefs(uid: int) -> dict:
     return json.loads(raw) if raw else {}
 
 
+def nutrition(uid: int, saved: dict, day: dict) -> dict | None:
+    """Calorie/protein/carb targets and a meal suggestion for one plan day; None until age, height, weight
+    and sex are filled in."""
+    from . import nutrition as N
+    p = prefs(uid)
+    if not all(p.get(k) for k in ("age", "height_cm", "weight_kg", "sex")):
+        return None
+    days_to_race = (date.fromisoformat(saved["params"]["event_date"]) - date.fromisoformat(day["date"])).days
+    sess = day.get("sessions") or []
+    t = N.targets(p["weight_kg"], p["height_cm"], p["age"], p["sex"], sess, plan_paces(saved)["easy"], days_to_race)
+    idx = date.fromisoformat(day["date"]).toordinal()
+    return {"target": t, "menu": N.day_meals(idx, sess, t), "tip": N.TIPS[idx % len(N.TIPS)]}
+
+
 def bmi(uid: int) -> float | None:
     p = prefs(uid)
     if p.get("height_cm") and p.get("weight_kg"):
